@@ -281,7 +281,7 @@ router.post('/login', validateRequest(loginSchema), login)
  *       400:
  *         description: Invalid token
  */
-router.post('/logout', authMiddleware, logoutUser)
+router.post('/logout', logoutUser)
 
 /**
  * @swagger
