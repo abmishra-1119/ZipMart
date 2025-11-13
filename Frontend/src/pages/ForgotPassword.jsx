@@ -40,7 +40,7 @@ const ForgotPassword = () => {
             setCurrentStep(1);
             toast.success('OTP sent to your email successfully!');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to send OTP');
+            toast.error(error || 'Failed to send OTP');
         } finally {
             setLoading(false);
         }
@@ -61,7 +61,7 @@ const ForgotPassword = () => {
             toast.success('Password reset successfully!');
             setTimeout(() => navigate('/login'), 3000);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to reset password');
+            toast.error(error || 'Failed to reset password');
         } finally {
             setLoading(false);
         }

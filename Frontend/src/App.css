@@ -1,0 +1,27 @@
+/* styles/globals.css */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.min-h-\[40px\] {
+  min-height: 40px;
+}
+
+/* Custom pagination styles */
+.pagination-custom .ant-pagination-item-active {
+  border-color: #1890ff;
+}
+
+.pagination-custom .ant-pagination-item-active a {
+  color: #1890ff;
+}

@@ -8,7 +8,20 @@ export const authMiddleware = (req, res, next) => {
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.ACCESS_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) {
+            // Check if token is expired
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    code: 'TOKEN_EXPIRED',
+                    message: 'Token has expired'
+                });
+            }
+            // Other token errors (invalid, malformed, etc.)
+            return res.status(403).json({
+                code: 'INVALID_TOKEN',
+                message: 'Invalid token'
+            });
+        }
 
         req.user = user;
         next();

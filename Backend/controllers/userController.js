@@ -191,7 +191,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 // Update user details
 export const updateUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
 
     const updated = await User.findByIdAndUpdate(id, req.body, { new: true }).select(
         "name email age role updatedAt"

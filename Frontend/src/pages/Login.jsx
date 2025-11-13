@@ -24,12 +24,12 @@ const Login = () => {
 
             toast.success('Login successful!');
 
-            const role = response.user.role;            
+            const role = response.user.role;
             if (role === 'admin') navigate('/admin/dashboard');
             else if (role === 'seller') navigate('/seller/dashboard');
             else navigate('/');
         } catch (error) {
-            toast.error(error.response?.data?.data?.message || error || 'Login failed');
+            toast.error(error || 'Login failed');
         } finally {
             setLoading(false);
         }

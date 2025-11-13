@@ -25,19 +25,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
 
 const { Header } = Layout;
+const { Search } = Input;
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const { user, isAuthenticated,cart } = useSelector((state) => state.auth);
-
+  const { user, isAuthenticated, cart } = useSelector((state) => state.auth);
   const cartItems = cart && cart.length;
 
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
 
   const handleLogout = () => {
     dispatch(logout());
@@ -46,7 +45,8 @@ const Navbar = () => {
 
   const handleSearch = (value) => {
     if (value.trim()) {
-      navigate(`/products?search=${value}`);
+      navigate(`/search?q=${encodeURIComponent(value.trim())}`);
+      setSearchQuery(''); // Clear search after submitting
     }
   };
 
@@ -66,8 +66,8 @@ const Navbar = () => {
           user?.role === 'admin'
             ? 'Admin Dashboard'
             : user?.role === 'seller'
-            ? 'Seller Dashboard'
-            : 'My Orders',
+              ? 'Seller Dashboard'
+              : 'My Orders',
         onClick: () => {
           if (user?.role === 'admin') navigate('/admin/dashboard');
           else if (user?.role === 'seller') navigate('/seller/dashboard');
@@ -108,20 +108,20 @@ const Navbar = () => {
         className="text-white text-2xl font-bold flex items-center cursor-pointer"
         onClick={() => navigate('/')}
       >
-            <ShoppingCartOutlined style={{ marginRight: '8px', fontSize: '24px' }} />
+        <ShoppingCartOutlined style={{ marginRight: '8px', fontSize: '24px' }} />
         E-Shop
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar with Button */}
       <div className="hidden md:flex flex-1 justify-center px-8">
-        <Input
+        <Search
           size="large"
           placeholder="Search products..."
-          prefix={<SearchOutlined />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onPressEnter={(e) => handleSearch(e.target.value)}
-          className="max-w-md rounded-xl"
+          onSearch={handleSearch}
+          enterButton={<SearchOutlined />}
+          className="max-w-md"
         />
       </div>
 
@@ -159,17 +159,17 @@ const Navbar = () => {
         )}
       </div>
 
-        {/* Mobile Menu Button (only visible on small screens) */}
-        <div className="flex md:hidden">
-            <button
-                onClick={() => setMobileMenuVisible(true)}
-                className="p-2 rounded-md hover:bg-[#112240] transition"
-            >
-                <MenuOutlined style={{ fontSize: '20px', color: 'white' }} />
-            </button>
-        </div>
+      {/* Mobile Menu Button */}
+      <div className="flex md:hidden">
+        <button
+          onClick={() => setMobileMenuVisible(true)}
+          className="p-2 rounded-md hover:bg-[#112240] transition"
+        >
+          <MenuOutlined style={{ fontSize: '20px', color: 'white' }} />
+        </button>
+      </div>
 
-        {/* Mobile Drawer */}
+      {/* Mobile Drawer */}
       <Drawer
         title={
           <div className="flex items-center gap-2">
@@ -182,15 +182,15 @@ const Navbar = () => {
         open={mobileMenuVisible}
       >
         <div className="mb-4">
-          <Input
+          <Search
             placeholder="Search products..."
-            prefix={<SearchOutlined />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onPressEnter={(e) => {
-              handleSearch(e.target.value);
+            onSearch={(value) => {
+              handleSearch(value);
               setMobileMenuVisible(false);
             }}
+            enterButton={<SearchOutlined />}
           />
         </div>
 
@@ -210,37 +210,37 @@ const Navbar = () => {
             },
             ...(isAuthenticated
               ? [
-                  { type: 'divider' },
-                  {
-                    key: 'logout',
-                    icon: <LogoutOutlined />,
-                    label: 'Logout',
-                    danger: true,
-                    onClick: () => {
-                      handleLogout();
-                      setMobileMenuVisible(false);
-                    },
+                { type: 'divider' },
+                {
+                  key: 'logout',
+                  icon: <LogoutOutlined />,
+                  label: 'Logout',
+                  danger: true,
+                  onClick: () => {
+                    handleLogout();
+                    setMobileMenuVisible(false);
                   },
-                ]
+                },
+              ]
               : [
-                  { type: 'divider' },
-                  {
-                    key: 'login',
-                    label: 'Login',
-                    onClick: () => {
-                      navigate('/login');
-                      setMobileMenuVisible(false);
-                    },
+                { type: 'divider' },
+                {
+                  key: 'login',
+                  label: 'Login',
+                  onClick: () => {
+                    navigate('/login');
+                    setMobileMenuVisible(false);
                   },
-                  {
-                    key: 'signup',
-                    label: 'Sign Up',
-                    onClick: () => {
-                      navigate('/signup');
-                      setMobileMenuVisible(false);
-                    },
+                },
+                {
+                  key: 'signup',
+                  label: 'Sign Up',
+                  onClick: () => {
+                    navigate('/signup');
+                    setMobileMenuVisible(false);
                   },
-                ]),
+                },
+              ]),
           ]}
         />
       </Drawer>

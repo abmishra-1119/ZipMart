@@ -39,7 +39,7 @@ const Signup = () => {
             setCurrentStep(1);
             toast.success('OTP sent to your email successfully!');
         } catch (error) {
-            toast.error(error?.message || 'Failed to send OTP');
+            toast.error(error || 'Failed to send OTP');
         } finally {
             setLoading(false);
         }
@@ -62,7 +62,7 @@ const Signup = () => {
             toast.success('Registration successful!');
             navigate('/login');
         } catch (error) {
-            toast.error(error?.message || 'Registration failed');
+            toast.error(error || 'Registration failed');
         } finally {
             setLoading(false);
         }

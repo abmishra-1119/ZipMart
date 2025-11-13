@@ -6,6 +6,9 @@ import Login from './pages/Login'
 import { ToastContainer } from 'react-toastify'
 import Signup from './pages/SignUp'
 import ForgotPassword from './pages/ForgotPassword'
+import ProductDetails from './pages/ProductDetails'
+import SearchPage from './pages/SearchPage'
+import CartPage from './pages/CartPage'
 
 function App() {
 
@@ -29,6 +32,9 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/signup' element={<Signup />} />
           <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/products/:id' element={<ProductDetails />} />
+          <Route path='/search' element={<SearchPage />} />
+          <Route path='/cart' element={<CartPage />} />
         </Routes>
       </BrowserRouter>
     </>

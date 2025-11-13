@@ -27,15 +27,15 @@ app.use('/uploads', express.static('uploads'));
 
 // app.use(logCheck); // This is custom logger 
 
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    limit: 15, // max 5 requests per window per IP
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    ipv6Subnet: 56,
-})
+// const limiter = rateLimit({
+//     windowMs: 1 * 60 * 1000, // 1 minute
+//     limit: 15, // max 5 requests per window per IP
+//     standardHeaders: 'draft-8',
+//     legacyHeaders: false,
+//     ipv6Subnet: 56,
+// })
 
-app.use(limiter)
+// app.use(limiter)
 app.use(
     cors({
         origin: "http://localhost:5173", // your frontend URL
