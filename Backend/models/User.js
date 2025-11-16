@@ -84,17 +84,20 @@ const UserSchema = mongoose.Schema({
         _id: false
     }],
     addresses: [{
-        fullName: String,
-        street: String,
-        city: String,
-        state: String,
-        country: String,
-        zipCode: String,
-        phone: String,
+        house: { type: String, required: true },
+        street: { type: String },
+        landmark: { type: String },
+        pincode: { type: Number, required: true },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        country: { type: String, default: 'India' },
         isDefault: { type: Boolean, default: false },
         _id: false
     }],
-
+    ordersCount: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    storeName: { type: String },
+    productsCount: { type: Number, default: 0 },
 }, { timestamps: true })
 
 UserSchema.pre('save', async function(next) {

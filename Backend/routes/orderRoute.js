@@ -7,7 +7,9 @@ import {
     getOrder,
     getOrdersBySeller,
     updateOrderStatus,
-    updateRefund
+    updateRefund,
+    getOrderDetails,
+    getOrdersByUser
 } from '../controllers/orderController.js'
 import { adminMiddleware, authMiddleware, sellerMiddleware } from '../middlewares/authMiddleware.js'
 
@@ -247,6 +249,35 @@ router.get('/', authMiddleware, adminMiddleware, getOrder)
 
 /**
  * @swagger
+ * /orders/user/{id}:
+ *   get:
+ *     summary: Get orders by user ID
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Orders retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Order'
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/user/:id', authMiddleware, getOrdersByUser)
+
+/**
+ * @swagger
  * /orders/my:
  *   get:
  *     summary: Get current user's orders
@@ -348,7 +379,7 @@ router.get('/seller', authMiddleware, sellerMiddleware, getOrdersBySeller)
  *       401:
  *         description: Unauthorized
  */
-router.patch('/status/:id', authMiddleware, sellerMiddleware, updateOrderStatus)
+router.put('/status/:id', authMiddleware, sellerMiddleware, updateOrderStatus)
 
 /**
  * @swagger
@@ -379,7 +410,7 @@ router.patch('/status/:id', authMiddleware, sellerMiddleware, updateOrderStatus)
  *       401:
  *         description: Unauthorized
  */
-router.patch('/cancel/:id', authMiddleware, cancelOrder)
+router.put('/cancel/:id', authMiddleware, cancelOrder)
 
 /**
  * @swagger
@@ -426,7 +457,7 @@ router.patch('/cancel/:id', authMiddleware, cancelOrder)
  *       401:
  *         description: Unauthorized
  */
-router.patch('/refund/:id', authMiddleware, sellerMiddleware, updateRefund)
+router.put('/refund/:id', authMiddleware, adminMiddleware, updateRefund)
 
 /**
  * @swagger
@@ -454,5 +485,8 @@ router.patch('/refund/:id', authMiddleware, sellerMiddleware, updateRefund)
  *         description: Admin access required
  */
 router.delete('/:id', authMiddleware, adminMiddleware, deleteOrder)
+
+// get Order By details
+router.get('/:id', authMiddleware, getOrderDetails)
 
 export default router

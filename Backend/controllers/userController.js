@@ -51,7 +51,7 @@ export const verifyOtpAndRegister = asyncHandler(async (req, res) => {
 
 // Create new user (admin only)
 export const createUser = asyncHandler(async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, storeName } = req.body;
 
     if (!name || !email || !password)
         return res.status(400).json({ message: "All fields are required" });
@@ -59,7 +59,7 @@ export const createUser = asyncHandler(async (req, res) => {
     const find = await User.findOne({ email });
     if (find) return res.status(400).json({ message: "Email is already registered" });
 
-    const newUser = new User({ name, email, password, role });
+    const newUser = new User({ name, email, password, role, storeName });
     await newUser.save();
 
     successResponse(res, 201, "User created successfully", {
@@ -67,6 +67,7 @@ export const createUser = asyncHandler(async (req, res) => {
         email: newUser.email,
         age: newUser.age,
         role: newUser.role,
+        storeName: newUser.storeName,
     });
 });
 
@@ -128,36 +129,69 @@ export const logoutUser = asyncHandler(async (req, res) => {
 
 // Refresh access token using refresh token
 export const refreshToken = asyncHandler(async (req, res) => {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) return res.status(401).json({ message: "No token provided" });
+    const oldToken = req.cookies.refreshToken;
+    if (!oldToken) return res.status(401).json({ message: "No token provided" });
 
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_KEY);
-    const user = await User.findById(decoded.id);
+    let decoded;
+    try {
+        decoded = jwt.verify(oldToken, process.env.REFRESH_KEY);
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid refresh token" });
+    }
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findOne({
+        _id: decoded.id,
+        "refreshTokens.token": oldToken
+    }).lean();
 
-    const storedToken = user.refreshTokens.find((t) => t.token === refreshToken);
-    if (!storedToken) return res.status(403).json({ message: "Invalid token" });
+    if (!user) {
+        return res.status(403).json({ message: "Invalid token" });
+    }
 
-    const newAccessToken = jwt.sign({ id: user._id }, process.env.ACCESS_KEY, { expiresIn: "15m" });
-    const newRefreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_KEY, { expiresIn: "7d" });
+    // generate new tokens
+    const newAccessToken = jwt.sign(
+        { id: user._id },
+        process.env.ACCESS_KEY,
+        { expiresIn: "15m" }
+    );
 
-    user.refreshTokens = user.refreshTokens.filter((t) => t.token !== refreshToken);
-    user.refreshTokens.push({
-        token: newRefreshToken,
-        userAgent: storedToken.userAgent,
-        createdAt: new Date(),
-    });
-    await user.save();
+    const newRefreshToken = jwt.sign(
+        { id: user._id },
+        process.env.REFRESH_KEY,
+        { expiresIn: "7d" }
+    );
 
+    // STEP 1: Remove old refresh token
+    await User.updateOne(
+        { _id: user._id },
+        { $pull: { refreshTokens: { token: oldToken } } }
+    );
+
+    // STEP 2: Add new refresh token
+    await User.updateOne(
+        { _id: user._id },
+        {
+            $push: {
+                refreshTokens: {
+                    token: newRefreshToken,
+                    userAgent: req.headers["user-agent"],
+                    createdAt: new Date()
+                }
+            }
+        }
+    );
+
+    // send new refresh token cookie
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    successResponse(res, 200, "Token refreshed", { accessToken: newAccessToken });
+    successResponse(res, 200, "Token refreshed", {
+        accessToken: newAccessToken
+    });
 });
 
 // Get paginated users list
@@ -167,7 +201,7 @@ export const getUser = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [users, totalUsers] = await Promise.all([
-        User.find({}, "name email age role createdAt").skip(skip).limit(limit),
+        User.find({}, "name email age role createdAt avatar ordersCount").skip(skip).limit(limit),
         User.countDocuments(),
     ]);
 
@@ -183,7 +217,7 @@ export const getUser = asyncHandler(async (req, res) => {
 // Get user by ID
 export const getUserById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const user = await User.findById(id).select("name email age role createdAt");
+    const user = await User.findById(id)
     if (!user) return res.status(404).json({ message: "User not found" });
 
     successResponse(res, 200, "User fetched successfully", user);
@@ -211,7 +245,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
 // Get current user profile
 export const profile = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const user = await User.findById(id).select("name email age role cart");
+    const user = await User.findById(id).select("name email age role cart addresses avatar createdAt updatedAt ordersCount");
     successResponse(res, 200, "Profile fetched successfully", user);
 });
 
@@ -274,8 +308,20 @@ export const updateCart = asyncHandler(async (req, res) => {
 
 // Get all sellers
 export const getAllSeller = asyncHandler(async (req, res) => {
-    const sellers = await User.find({ role: "seller" }).select("name email role createdAt");
-    successResponse(res, 200, "All sellers fetched", sellers);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const sellers = await User.find({ role: "seller" }).select("name email role storeName productsCount isActive createdAt").skip(skip).limit(limit);
+    const totalSeller = await User.countDocuments({ role: "seller" });
+
+    successResponse(res, 200, "All sellers fetched", {
+        page,
+        limit,
+        totalSellers: totalSeller,
+        totalPages: Math.ceil(totalSeller / limit),
+        sellers,
+    });
 });
 
 // Send forgot password OTP
@@ -355,3 +401,134 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
 
     successResponse(res, 200, 'Avatar uploaded successfully', uploaded);
 });
+
+// ADD NEW ADDRESS
+export const addAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const address = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // If first address → make default
+        if (user.addresses.length === 0) {
+            address.isDefault = true;
+        }
+
+        user.addresses.push(address);
+        await user.save();
+
+        res.status(201).json({
+            message: "Address added successfully",
+            addresses: user.addresses
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// GET ALL ADDRESSES
+export const getAddresses = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).select("addresses");
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        res.status(200).json(user.addresses);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// UPDATE ADDRESS
+export const updateAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const addressIndex = req.params.index;  // Since _id: false
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (!user.addresses[addressIndex]) {
+            return res.status(400).json({ message: "Address not found" });
+        }
+
+        user.addresses[addressIndex] = {
+            ...user.addresses[addressIndex],
+            ...req.body
+        };
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Address updated successfully",
+            addresses: user.addresses
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// DELETE ADDRESS
+export const deleteAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const addressIndex = req.params.index;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (!user.addresses[addressIndex]) {
+            return res.status(400).json({ message: "Address not found" });
+        }
+
+        const wasDefault = user.addresses[addressIndex].isDefault;
+
+        user.addresses.splice(addressIndex, 1);
+
+        // If deleted default → assign new default
+        if (wasDefault && user.addresses.length > 0) {
+            user.addresses[0].isDefault = true;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Address deleted successfully",
+            addresses: user.addresses
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// SET DEFAULT ADDRESS
+export const setDefaultAddress = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const addressIndex = req.params.index;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (!user.addresses[addressIndex]) {
+            return res.status(400).json({ message: "Address not found" });
+        }
+
+        // Clear all default flags
+        user.addresses.forEach(addr => (addr.isDefault = false));
+
+        // Set selected as default
+        user.addresses[addressIndex].isDefault = true;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Default address updated",
+            addresses: user.addresses
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

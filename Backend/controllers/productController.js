@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import User from "../models/User.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { successResponse } from "../utils/response.js";
 import { cloudinaryUploadImg, cloudinaryDeleteImg } from "../config/cloudinary.js";
@@ -8,8 +9,6 @@ export const createProduct = asyncHandler(async(req, res) => {
     const { id } = req.user;
     const { title, description, price, stock, brand, category } = req.body;
     const files = req.files;
-
-    console.log(files);
 
     if (!title || !description || !price || !stock || !files.length) {
         res.status(400);
@@ -34,6 +33,10 @@ export const createProduct = asyncHandler(async(req, res) => {
         images: uploadResults,
         thumbnail: uploadResults[0].url || "",
     });
+
+    const user = await User.findById(id);
+    user.productsCount += 1;
+    await user.save();
 
     return successResponse(res, 201, "Product created successfully", newProduct);
 });
@@ -64,7 +67,8 @@ export const getAllProducts = asyncHandler(async(req, res) => {
         .skip(skip)
         .limit(limit)
         .sort(sortOption)
-        // .hint({ category: 1, brand: 1 });
+        .populate("sellerId", "name email")
+    // .hint({ category: 1, brand: 1 });
 
     const totalProducts = await Product.countDocuments(filter);
 
@@ -132,15 +136,55 @@ export const updateProduct = asyncHandler(async(req, res) => {
         throw new Error("Product not found");
     }
 
-    if (files.length) {
-        await Promise.all(
-            product.images.map((img) => cloudinaryDeleteImg(img.public_id))
+    // Parse removed images if provided
+    let removedImageIds = [];
+    if (update.removedImages) {
+        try {
+            removedImageIds = JSON.parse(update.removedImages);
+            delete update.removedImages; // Remove from update object
+        } catch (error) {
+            console.error('Error parsing removedImages:', error);
+        }
+    }
+
+    // Handle image removal first
+    if (removedImageIds.length > 0) {
+        // Delete removed images from Cloudinary
+        const imagesToRemove = product.images.filter(img =>
+            removedImageIds.includes(img.public_id)
         );
+
+        await Promise.all(
+            imagesToRemove.map((img) => cloudinaryDeleteImg(img.public_id))
+        );
+
+        // Update images array by removing deleted ones
+        product.images = product.images.filter(img =>
+            !removedImageIds.includes(img.public_id)
+        );
+    }
+
+    // Handle new file uploads
+    if (files && files.length > 0) {
         const uploadResults = await Promise.all(
             files.map((file) => cloudinaryUploadImg(file.buffer))
         );
-        update.images = uploadResults;
-        update.thumbnail = uploadResults[0].url;
+
+        // Add new images to existing ones
+        update.images = [...product.images, ...uploadResults];
+
+        // Update thumbnail if new images were uploaded
+        if (uploadResults.length > 0 && !update.thumbnail) {
+            update.thumbnail = uploadResults[0].url;
+        }
+    } else {
+        // No new files, keep existing images
+        update.images = product.images;
+    }
+
+    // If thumbnail is explicitly set to empty, set it to first image
+    if (update.thumbnail === '' && update.images.length > 0) {
+        update.thumbnail = update.images[0].url;
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(id, update, {
@@ -216,7 +260,7 @@ export const updateMyProduct = asyncHandler(async(req, res) => {
 });
 
 // Add or update product rating
-export const addRating = asyncHandler(async(req, res) => {
+export const addRating = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { star, comment } = req.body;
     const { id } = req.params;
@@ -243,7 +287,10 @@ export const addRating = asyncHandler(async(req, res) => {
 
     await product.save();
 
-    return successResponse(res, 200, "Rating updated successfully", product);
+    const populatedProduct = await Product.findById(product._id)
+        .populate('ratings.postedBy', 'name email');
+
+    return successResponse(res, 200, "Rating updated successfully", populatedProduct);
 });
 
 // Get all categories

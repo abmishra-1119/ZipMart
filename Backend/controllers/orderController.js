@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
 
 // Create new order with stock validation and coupon discount
 export const createOrder = async(req, res) => {
@@ -80,6 +81,8 @@ export const createOrder = async(req, res) => {
             address,
         });
 
+        await User.findByIdAndUpdate(userId, { $inc: { ordersCount: 1 } });
+
         res.status(201).json({
             message: 'Order created successfully',
             order: newOrder,
@@ -97,7 +100,7 @@ export const getOrder = async(req, res) => {
         const skip = (page - 1) * limit;
 
         const orders = await Order.find()
-            .select('user products orderDate status totalPrice finalPrice paymentMethod discount')
+            .select('user products orderDate status totalPrice finalPrice paymentMethod discount address')
             .populate('user', 'name email')
             .populate('coupon', 'name discount')
             .sort({ orderDate: -1 })
@@ -116,6 +119,44 @@ export const getOrder = async(req, res) => {
                 pages: Math.ceil(total / limit),
             },
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// get Order by User Id
+export const getOrdersByUser = async(req, res) => {
+    try {
+        const userId = req.params.id;
+        if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const orders = await Order.find({ user: userId })
+            .select('products orderDate status totalPrice finalPrice paymentMethod discount address')
+            .populate('products.productId', 'title price thumbnail')
+            .populate('coupon', 'name discount')
+            .sort({ orderDate: -1 })
+            .lean();
+
+        res.status(200).json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// get Order By Id
+export const getOrderDetails = async(req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId)
+            .select('user products orderDate status totalPrice finalPrice paymentMethod discount address refundProcess refundMsg')
+            .populate('user', 'name email phone')
+            .populate('coupon', 'name discount')
+            .populate('products.productId', 'title price thumbnail')
+            .lean();
+
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        res.status(200).json(order);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -151,7 +192,7 @@ export const getOrdersBySeller = async(req, res) => {
         const skip = (page - 1) * limit;
 
         const orders = await Order.find({ 'products.sellerId': sellerId })
-            .select('user products orderDate status totalPrice finalPrice discount')
+            .select('user products orderDate status totalPrice finalPrice discount paymentMethod address')
             .populate('user', 'name email phone')
             .populate('products.productId', 'title price thumbnail')
             .sort({ orderDate: -1 })
@@ -189,7 +230,7 @@ export const updateOrderStatus = async(req, res) => {
         const order = await Order.findByIdAndUpdate(id, updateData, {
             new: true,
             runValidators: true,
-        }).select('status refundProcess refundMsg refundTime');
+        });
 
         if (!order) return res.status(404).json({ message: 'Order not found' });
 

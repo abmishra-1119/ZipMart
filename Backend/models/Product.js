@@ -74,6 +74,7 @@ const ProductSchema = new mongoose.Schema({
         default: 0,
     },
     thumbnail: String,
+    isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 // Indexes for faster searching

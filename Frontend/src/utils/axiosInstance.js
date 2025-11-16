@@ -6,13 +6,22 @@ const api = axios.create({
     withCredentials: true,
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) prom.reject(error);
+        else prom.resolve(token);
+    });
+    failedQueue = [];
+};
+
 // REQUEST INTERCEPTOR
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("userToken");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     },
     (error) => Promise.reject(error)
@@ -24,17 +33,29 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        if (!error.response) {
-            return Promise.reject(error);
-        }
+        if (!error.response) return Promise.reject(error);
 
-        const isTokenExpired = error.response.status === 401 &&
-            error.response.data?.code === 'TOKEN_EXPIRED';
+        const isTokenExpired =
+            error.response.status === 401 &&
+            error.response.data?.code === "TOKEN_EXPIRED";
 
         const isUnauthorized = error.response.status === 401;
 
         if ((isTokenExpired || isUnauthorized) && !originalRequest._retry) {
             originalRequest._retry = true;
+
+            if (isRefreshing) {
+                return new Promise(function (resolve, reject) {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch((err) => Promise.reject(err));
+            }
+
+            isRefreshing = true;
 
             try {
                 const res = await axios.post(
@@ -42,16 +63,21 @@ api.interceptors.response.use(
                     {},
                     { withCredentials: true }
                 );
-                console.log(res);
 
                 const newToken = res?.data?.data?.accessToken;
-                if (newToken) {
-                    localStorage.setItem("userToken", newToken);
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                    return api(originalRequest);
-                }
+
+                localStorage.setItem("userToken", newToken);
+                api.defaults.headers.Authorization = `Bearer ${newToken}`;
+
+                processQueue(null, newToken);
+                isRefreshing = false;
+
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return api(originalRequest);
             } catch (refreshError) {
-                console.error("Refresh token failed — logging out...");
+                processQueue(refreshError, null);
+                isRefreshing = false;
+
                 localStorage.removeItem("userToken");
                 localStorage.removeItem("user");
 
@@ -63,7 +89,6 @@ api.interceptors.response.use(
             }
         }
 
-        // For 403 errors that aren't token-related, reject normally
         return Promise.reject(error);
     }
 );

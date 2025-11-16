@@ -20,7 +20,7 @@ import {
     ShoppingOutlined,
     DeleteOutlined
 } from '@ant-design/icons';
-import { getCart, emptyCart, removeFromCart, updateCartItem } from '../features/auth/authSlice';
+import { getCart, emptyCart } from '../features/auth/authSlice';
 import { getProductById } from '../features/product/productSlice';
 import CartItem from '../components/CartItem';
 
@@ -28,11 +28,10 @@ const CartPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { cart, isLoading, user, isAuthenticated, message: authMessage } = useSelector(state => state.auth);
+    const { cart, isLoading, user, isAuthenticated } = useSelector(state => state.auth);
     const { products: allProducts } = useSelector(state => state.products);
 
     const [cartProducts, setCartProducts] = useState([]);
-    const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [loadingProducts, setLoadingProducts] = useState(false);
 
     // Load cart when component mounts and user is authenticated
@@ -70,6 +69,7 @@ const CartPage = () => {
                         }
                     } catch (error) {
                         console.error(`Failed to fetch product ${item.productId}:`, error);
+                        message.error(`Failed to load some products in your cart.`);
                         // Continue with other products even if one fails
                     }
                 }
@@ -77,6 +77,7 @@ const CartPage = () => {
                 setCartProducts(products);
             } catch (error) {
                 console.error('Error fetching cart products:', error);
+                message.error('Failed to load cart products. Please try again.');
             } finally {
                 setLoadingProducts(false);
             }
@@ -84,17 +85,6 @@ const CartPage = () => {
 
         fetchCartProducts();
     }, [cart, allProducts, dispatch]);
-
-    // Show auth messages
-    useEffect(() => {
-        if (authMessage) {
-            if (authMessage.includes('success')) {
-                message.success(authMessage);
-            } else {
-                message.error(authMessage);
-            }
-        }
-    }, [authMessage]);
 
     const handleEmptyCart = () => {
         Modal.confirm({
@@ -106,14 +96,15 @@ const CartPage = () => {
             onOk: async () => {
                 try {
                     await dispatch(emptyCart()).unwrap();
+                    message.success('Cart emptied successfully');
                 } catch (error) {
-                    // Error is handled by the slice
+                    message.error(error || 'Failed to empty cart');
                 }
             },
         });
     };
 
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         if (!isAuthenticated) {
             message.warning('Please login to proceed with checkout');
             navigate('/login');
@@ -132,23 +123,13 @@ const CartPage = () => {
             return;
         }
 
-        setIsCheckingOut(true);
-        try {
-            // Simulate checkout process
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            message.success('Order placed successfully!');
-
-            // Clear cart after successful checkout
-            await dispatch(emptyCart()).unwrap();
-
-            // Navigate to orders page or confirmation
-            navigate('/orders');
-        } catch (error) {
-            message.error('Checkout failed. Please try again.');
-        } finally {
-            setIsCheckingOut(false);
-        }
+        // Navigate to checkout page with cart data
+        navigate('/checkout', {
+            state: {
+                cartProducts,
+                orderSummary: calculateTotals()
+            }
+        });
     };
 
     const calculateTotals = () => {
@@ -327,18 +308,17 @@ const CartPage = () => {
                                         type="primary"
                                         size="large"
                                         icon={<ShoppingCartOutlined />}
-                                        loading={isCheckingOut}
                                         onClick={handleCheckout}
                                         className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 border-none shadow-md"
                                     >
-                                        {isCheckingOut ? 'Processing...' : `Checkout $${total.toFixed(2)}`}
+                                        Proceed to Checkout
                                     </Button>
 
                                     {/* Continue Shopping */}
                                     <Button
                                         type="default"
                                         size="large"
-                                        onClick={() => navigate('/products')}
+                                        onClick={() => navigate('/')}
                                         className="w-full border-gray-300 hover:border-blue-500"
                                     >
                                         Continue Shopping

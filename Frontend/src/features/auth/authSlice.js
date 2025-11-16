@@ -16,6 +16,8 @@ export const loginUser = createAsyncThunk("user/login", async (userData, { rejec
     try {
         return await authService.login(userData);
     } catch (error) {
+        console.log(error);
+
         return rejectWithValue(error?.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });

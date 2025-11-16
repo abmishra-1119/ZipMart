@@ -21,7 +21,7 @@ export const getAllProducts = createAsyncThunk('products/get-all', async ({ limi
     try {
         return await productService.getAllProducts({ limit, page, category, brand, sortBy, order });
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'Something went wrong. Please try again.');
+        return rejectWithValue(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });
 
@@ -30,7 +30,7 @@ export const searchProduct = createAsyncThunk('products/search', async ({ query,
     try {
         return await productService.searchProduct({ query, limit, page });
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'Something went wrong. Please try again.');
+        return rejectWithValue(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });
 
@@ -39,7 +39,7 @@ export const getProductById = createAsyncThunk('products/get-by-id', async (prod
     try {
         return await productService.getProductById(productId);
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'Something went wrong. Please try again.');
+        return rejectWithValue(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });
 
@@ -48,7 +48,7 @@ export const getAllCategories = createAsyncThunk('products/get-categories', asyn
     try {
         return await productService.getAllCategories();
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'Something went wrong. Please try again.');
+        return rejectWithValue(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });
 
@@ -57,7 +57,7 @@ export const addRating = createAsyncThunk('products/add-rating', async ({ produc
     try {
         return await productService.addRating(productId, ratingData);
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'Something went wrong. Please try again.');
+        return rejectWithValue(error.response?.data?.error || 'Something went wrong. Please try again.');
     }
 });
 
@@ -74,16 +74,6 @@ const productSlice = createSlice({
         clearSearchResults: (state) => {
             state.searchResults = [];
         },
-        updateProductInList: (state, action) => {
-            const updatedProduct = action.payload;
-            const index = state.products.findIndex(product => product._id === updatedProduct._id);
-            if (index !== -1) {
-                state.products[index] = updatedProduct;
-            }
-            if (state.product && state.product._id === updatedProduct._id) {
-                state.product = updatedProduct;
-            }
-        }
     },
     extraReducers: (builder) => {
         builder
@@ -157,18 +147,8 @@ const productSlice = createSlice({
             })
             .addCase(addRating.fulfilled, (state, action) => {
                 state.isLoading = false;
-                // Update the product in state if it's currently loaded
-                if (state.product && state.product._id === action.meta.arg.productId) {
-                    state.product = action.payload.data;
-                }
-                // Update product in products list if it exists
-                const productIndex = state.products.findIndex(
-                    product => product._id === action.meta.arg.productId
-                );
-                if (productIndex !== -1) {
-                    state.products[productIndex] = action.payload.data;
-                }
-                state.message = 'Rating added successfully';
+                state.product = action.payload.data;
+                state.message = '';
             })
             .addCase(addRating.rejected, (state, action) => {
                 state.isLoading = false;

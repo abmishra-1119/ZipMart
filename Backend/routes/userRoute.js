@@ -20,7 +20,12 @@ import {
     updateCart,
     updateUser,
     uploadAvatar,
-    verifyOtpAndRegister
+    verifyOtpAndRegister,
+    addAddress,
+    getAddresses,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress
 } from '../controllers/userController.js'
 import { adminMiddleware, authMiddleware } from '../middlewares/authMiddleware.js'
 import { validateRequest } from '../middlewares/validateRoute.js'
@@ -28,6 +33,8 @@ import { getUserSchema, loginSchema, registerSchema, updateUserSchema } from '..
 import { upload } from '../middlewares/multer.js'
 
 const router = express.Router()
+
+router.get("/address", authMiddleware, getAddresses);
 
 /**
  * @swagger
@@ -219,7 +226,7 @@ const router = express.Router()
  *       401:
  *         description: Unauthorized
  */
-router.post('/', validateRequest(registerSchema), createUser)
+router.post('/', createUser)
 
 /**
  * @swagger
@@ -902,5 +909,10 @@ router.put('/',authMiddleware, validateRequest(updateUserSchema), updateUser)
  *         description: User deleted successfully
  */
 router.delete('/:id', deleteUser)
+
+router.post("/address/add", authMiddleware, addAddress);
+router.put("/address/:index", authMiddleware, updateAddress);
+router.delete("/address/:index", authMiddleware, deleteAddress);
+router.put("/address/default/:index", authMiddleware, setDefaultAddress);
 
 export default router
