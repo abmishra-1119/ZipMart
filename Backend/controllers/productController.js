@@ -299,3 +299,30 @@ export const getAllCategories = asyncHandler(async(req, res) => {
     const categories = await Product.distinct('category');
     return successResponse(res, 200, "Fetched all categories successfully", categories);
 });
+
+// Get Product by Seller ID (Admin)
+export const getProductBySellerId = asyncHandler(async(req, res) => {
+    const { id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find({sellerId: id})
+        .select("-__v -createdAt -updatedAt")
+        .skip(skip)
+        .limit(limit)
+        .populate("sellerId", "name email")
+        .populate("ratings.postedBy", "name email");
+    if (!products) {
+        res.status(404);
+        throw new Error("Product not found");
+    }
+    const totalProducts = await Product.countDocuments({ sellerId: id });
+    return successResponse(res, 200, "Product fetched successfully", {
+        page,
+        limit,
+        totalProducts,
+        totalPages: Math.ceil(totalProducts / limit),
+        products,
+    });
+});

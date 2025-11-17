@@ -204,6 +204,30 @@ export const adminGetOrdersBId = createAsyncThunk(
     }
 );
 
+// Get products by seller ID
+export const adminGetSellerProducts = createAsyncThunk(
+    "admin/getSellerProducts",
+    async ({ sellerId, limit = 10, page = 1 }, thunkAPI) => {
+        try {
+            return await adminProductService.getSellerProducts(sellerId, { limit, page });
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+// Get Order by seller ID
+export const adminGetSellerOrders = createAsyncThunk(
+    "admin/getSellerOrders",
+    async ({ sellerId, limit = 10, page = 1 }, thunkAPI) => {
+        try {
+            return await adminProductService.adminGetSellerOrders({ sellerId, limit, page });
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 const initialState = {
     users: [],
     sellers: [],
@@ -375,7 +399,7 @@ const adminSlice = createSlice({
             .addCase(adminGetOrdersByUserId.pending, pending)
             .addCase(adminGetOrdersByUserId.fulfilled, (state, action) => {
                 state.isLoading = false;
-                console.log(action);
+                // console.log(action);
                 state.userOrders = action.payload || [];
             })
             .addCase(adminGetOrdersByUserId.rejected, rejected)
@@ -386,7 +410,21 @@ const adminSlice = createSlice({
                 state.isLoading = false;
                 state.orderDetails = action.payload || {};
             })
-            .addCase(adminGetOrdersBId.rejected, rejected);
+            .addCase(adminGetOrdersBId.rejected, rejected)
+            // Add this to the extraReducers in adminSlice
+            .addCase(adminGetSellerProducts.pending, pending)
+            .addCase(adminGetSellerProducts.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.products = action.payload.products || [];
+            })
+            .addCase(adminGetSellerProducts.rejected, rejected)
+
+            .addCase(adminGetSellerOrders.pending, pending)
+            .addCase(adminGetSellerOrders.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.orders = action.payload.orders || [];
+            })
+            .addCase(adminGetSellerOrders.rejected, rejected);
     },
 });
 

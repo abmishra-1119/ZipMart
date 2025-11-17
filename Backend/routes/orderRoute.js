@@ -9,7 +9,8 @@ import {
     updateOrderStatus,
     updateRefund,
     getOrderDetails,
-    getOrdersByUser
+    getOrdersByUser,
+    getOrdersBySellerId
 } from '../controllers/orderController.js'
 import { adminMiddleware, authMiddleware, sellerMiddleware } from '../middlewares/authMiddleware.js'
 
@@ -488,5 +489,8 @@ router.delete('/:id', authMiddleware, adminMiddleware, deleteOrder)
 
 // get Order By details
 router.get('/:id', authMiddleware, getOrderDetails)
+
+// get Order By seller id
+router.get('/seller/:id', authMiddleware, adminMiddleware, getOrdersBySellerId)
 
 export default router

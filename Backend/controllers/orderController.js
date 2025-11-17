@@ -136,7 +136,6 @@ export const getOrdersByUser = async(req, res) => {
             .populate('coupon', 'name discount')
             .sort({ orderDate: -1 })
             .lean();
-
         res.status(200).json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -307,6 +306,40 @@ export const updateRefund = async(req, res) => {
         if (!order) return res.status(404).json({ message: 'Order not found' });
 
         res.status(200).json(order);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get order by seller id
+export const getOrdersBySellerId = async(req, res) => {
+    try {
+        const sellerId = req.params.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const skip = (page - 1) * limit;
+        if (!sellerId) return res.status(401).json({ message: 'Unauthorized' });
+
+        const orders = await Order.find({ 'products.sellerId': sellerId })
+            .skip(skip)
+            .limit(limit)
+            .select('user products orderDate status totalPrice finalPrice discount paymentMethod address')
+            .populate('user', 'name email phone')
+            .populate('products.productId', 'title price thumbnail')
+            .sort({ orderDate: -1 })
+            .lean();
+
+        const total = await Order.countDocuments({ 'products.sellerId': sellerId });
+
+        res.status(200).json({
+            orders,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit),
+            },
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

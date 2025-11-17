@@ -29,18 +29,18 @@ import UserDetail from './pages/Admin/UserDetail';
 import AdminProductsManagement from './pages/Admin/ProductsManagement';
 import OrdersManagement from './pages/Admin/OrdersManagement';
 import AnalyticsDashboard from './pages/Admin/AnalyticsDashboard';
-import Settings from './pages/Admin/Settings';
 import ProductEdit from './pages/Admin/ProductEdit';
 import SellersManagement from './pages/Admin/SellersManagement';
 import CreateSeller from './pages/Admin/CreateSeller';
 import OrderDetail from './pages/Admin/OrderDetail';
+import SellerDetail from './pages/Admin/SellerDetail';
 
 function AppWrapper() {
   const location = useLocation();
 
-  // Hide navbar if route starts with /seller
-  const hideNavbar = location.pathname.startsWith("/seller");
-
+  // Hide navbar if route starts with /seller or /admin
+  const hiddenNavbarPaths = ["/seller", "/admin"];
+  const hideNavbar = hiddenNavbarPaths.some(path => location.pathname.startsWith(path));
   return (
     <>
       {!hideNavbar && <Navbar />}
@@ -85,10 +85,9 @@ function AppWrapper() {
           <Route path="products/edit/:productId" element={<ProductEdit />} />
           <Route path="orders" element={<OrdersManagement />} />
           <Route path="analytics" element={<AnalyticsDashboard />} />
-          <Route path="settings" element={<Settings />} />
           <Route path="sellers" element={<SellersManagement />} />
           <Route path="sellers/create" element={<CreateSeller />} />
-          {/* <Route path="sellers/:sellerId" element={<SellerDetail />} /> */}
+          <Route path="sellers/:sellerId" element={<SellerDetail />} />
           <Route path='orders/:orderId' element={<OrderDetail />} />
         </Route>
       </Routes>

@@ -1,4 +1,3 @@
-// layouts/AdminDashboardLayout.jsx
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -22,7 +21,6 @@ import {
     LogoutOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    SettingOutlined,
     ShopOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -99,11 +97,6 @@ const AdminDashboardLayout = () => {
             icon: <BarChartOutlined />,
             label: 'Analytics',
         },
-        {
-            key: '/admin/dashboard/settings',
-            icon: <SettingOutlined />,
-            label: 'Settings',
-        },
     ];
 
     return (
@@ -162,23 +155,21 @@ const AdminDashboardLayout = () => {
                     </div>
 
                     <Space size="middle">
-                        {/* Notifications */}
-                        <Badge count={5} size="small">
-                            <Button type="text" icon={<FileTextOutlined />} />
-                        </Badge>
-
                         {/* User Profile */}
                         <Dropdown menu={profileMenu} placement="bottomRight">
-                            <Space className="cursor-pointer">
+                            <Space className="cursor-pointer max-w-[180px] overflow-hidden">
                                 <Avatar
                                     size="small"
                                     src={user?.avatar?.url}
                                     icon={<UserOutlined />}
                                 />
-                                <div className="hidden md:block">
-                                    <Text strong>{user?.name}</Text>
-                                    <br />
-                                    <Text type="secondary" className="text-xs">Administrator</Text>
+                                <div className="hidden md:flex flex-col leading-tight overflow-hidden">
+                                    <Text strong ellipsis className="truncate max-w-[140px]">
+                                        {user?.name || "Admin User"}
+                                    </Text>
+                                    <Text type="secondary" className="text-[10px] truncate max-w-[140px]">
+                                        Administrator
+                                    </Text>
                                 </div>
                             </Space>
                         </Dropdown>

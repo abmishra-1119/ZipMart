@@ -106,6 +106,8 @@ const getOrderStatusSummary = async () => {
 
 const adminGetOrdersByUserId = async (userId) => {
     const response = await api.get(`orders/user/${userId}`);
+    console.log(response);
+
     return response.data;
 }
 
@@ -113,6 +115,23 @@ const adminGetOrdersBId = async (userId) => {
     const response = await api.get(`orders/${userId}`);
     return response.data;
 }
+
+// Get products for a specific seller
+const getSellerProducts = async (sellerId, { limit = 10, page = 1 }) => {
+    const response = await api.get(`products/seller/${sellerId}?page=${page}&limit=${limit}`);
+    // console.log(response);
+
+    return response.data.data;
+};
+
+// get Order by Selller ID
+const adminGetSellerOrders = async ({ sellerId, limit = 10, page = 1 }) => {
+    const response = await api.get(`orders/seller/${sellerId}?page=${page}&limit=${limit}`);
+    // console.log(response);
+    return response.data;
+}
+
+
 // ------------------------------
 export const adminProductService = {
     createUser,
@@ -132,5 +151,7 @@ export const adminProductService = {
     getAdminTopSellingProducts,
     getOrderStatusSummary,
     adminGetOrdersByUserId,
-    adminGetOrdersBId
+    adminGetOrdersBId,
+    getSellerProducts,
+    adminGetSellerOrders,
 };

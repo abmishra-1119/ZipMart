@@ -10,7 +10,8 @@ import {
     getProductById,
     searchProduct,
     updateMyProduct,
-    updateProduct
+    updateProduct,
+    getProductBySellerId
 } from '../controllers/productController.js'
 import { adminMiddleware, authMiddleware, sellerMiddleware } from '../middlewares/authMiddleware.js'
 import { upload } from '../middlewares/multer.js'
@@ -18,6 +19,8 @@ import { upload } from '../middlewares/multer.js'
 const router = express.Router()
 
 router.get('/category', getAllCategories)
+
+router.get('/seller/:id', getProductBySellerId)
 
 /**
  * @swagger
