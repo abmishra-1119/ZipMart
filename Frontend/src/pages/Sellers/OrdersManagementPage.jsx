@@ -1,4 +1,3 @@
-// pages/seller/OrdersManagementPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -126,7 +125,7 @@ const OrdersManagementPage = () => {
             title: 'Amount',
             dataIndex: 'finalPrice',
             key: 'finalPrice',
-            render: (price) => `$${price}`,
+            render: (price) => `₹${price}`,
             sorter: (a, b) => a.finalPrice - b.finalPrice,
         },
         {
@@ -225,7 +224,7 @@ const OrdersManagementPage = () => {
                         <Statistic
                             title="Total Revenue"
                             value={orderStats.revenue}
-                            prefix="$"
+                            prefix="₹"
                             valueStyle={{ color: '#722ed1' }}
                         />
                     </Card>

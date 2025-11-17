@@ -1,4 +1,3 @@
-// pages/OrderDetailsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -292,7 +291,7 @@ const OrderDetailsPage = () => {
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Total Amount">
                                     <span className="text-green-600 font-bold text-lg">
-                                        ${currentOrder.finalPrice}
+                                        ₹{currentOrder.finalPrice}
                                     </span>
                                 </Descriptions.Item>
                             </Descriptions>
@@ -335,7 +334,7 @@ const OrderDetailsPage = () => {
                                                 Quantity: {product.count}
                                             </p>
                                             <p className="text-gray-600 text-sm">
-                                                Price: ${product.price} each
+                                                Price: ₹{product.price} each
                                             </p>
                                             {product.productId?.brand && (
                                                 <Tag color="blue" className="text-xs mt-1">
@@ -345,7 +344,7 @@ const OrderDetailsPage = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold text-green-600">
-                                                ${(product.price * product.count).toFixed(2)}
+                                                ₹{(product.price * product.count).toFixed(2)}
                                             </p>
                                         </div>
                                     </div>
@@ -356,17 +355,17 @@ const OrderDetailsPage = () => {
                                 <div className="space-y-2 text-right">
                                     <div className="flex justify-between max-w-xs ml-auto">
                                         <span className="text-gray-600">Subtotal:</span>
-                                        <span>${currentOrder.totalPrice?.toFixed(2)}</span>
+                                        <span>₹{currentOrder.totalPrice?.toFixed(2)}</span>
                                     </div>
                                     {currentOrder.discount > 0 && (
                                         <div className="flex justify-between max-w-xs ml-auto">
                                             <span className="text-gray-600">Discount:</span>
-                                            <span className="text-red-600">-${currentOrder.discount?.toFixed(2)}</span>
+                                            <span className="text-red-600">-₹{currentOrder.discount?.toFixed(2)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between max-w-xs ml-auto text-lg font-bold">
                                         <span>Total:</span>
-                                        <span className="text-green-600">${currentOrder.finalPrice?.toFixed(2)}</span>
+                                        <span className="text-green-600">₹{currentOrder.finalPrice?.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -396,7 +395,7 @@ const OrderDetailsPage = () => {
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <p><strong>Order ID:</strong> {currentOrder._id}</p>
                                 <p><strong>Order Date:</strong> {new Date(currentOrder.orderDate).toLocaleDateString()}</p>
-                                <p><strong>Total Amount:</strong> ${currentOrder.finalPrice}</p>
+                                <p><strong>Total Amount:</strong> ₹{currentOrder.finalPrice}</p>
                                 <p><strong>Items:</strong> {currentOrder.products.reduce((total, product) => total + product.count, 0)} item(s)</p>
                                 <p><strong>Current Status:</strong> <Tag color={getStatusColor(currentOrder.status)}>{getStatusText(currentOrder.status)}</Tag></p>
                             </div>

@@ -99,7 +99,7 @@ const OrderConfirmation = () => {
                         </Descriptions.Item>
                         <Descriptions.Item label="Total Amount">
                             <span className="text-green-600 font-bold">
-                                ${currentOrder.finalPrice}
+                                ₹{currentOrder.finalPrice}
                             </span>
                         </Descriptions.Item>
                         <Descriptions.Item label="Delivery Address">

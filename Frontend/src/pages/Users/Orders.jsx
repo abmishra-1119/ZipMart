@@ -330,7 +330,7 @@ const OrdersPage = () => {
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <p><strong>Order ID:</strong> {selectedOrder._id}</p>
                                 <p><strong>Order Date:</strong> {new Date(selectedOrder.orderDate).toLocaleDateString()}</p>
-                                <p><strong>Total Amount:</strong> ${selectedOrder.finalPrice}</p>
+                                <p><strong>Total Amount:</strong> ₹{selectedOrder.finalPrice}</p>
                                 <p><strong>Items:</strong> {selectedOrder.products.reduce((total, product) => total + product.count, 0)} item(s)</p>
                             </div>
                         </div>
@@ -375,7 +375,7 @@ const OrderCard = ({
                     {/* Products Preview */}
                     <div className="mb-3">
                         <p className="text-gray-700 mb-2">
-                            {itemsCount} item(s) • ${order.finalPrice}
+                            {itemsCount} item(s) • ₹{order.finalPrice}
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {order.products.slice(0, 3).map((product, index) => (

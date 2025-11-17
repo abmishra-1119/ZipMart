@@ -62,7 +62,7 @@ const DashboardOverview = () => {
             title: 'Amount',
             dataIndex: 'finalPrice',
             key: 'finalPrice',
-            render: (price) => `$${price}`,
+            render: (price) => `₹${price}`,
         },
         {
             title: 'Status',
@@ -116,7 +116,7 @@ const DashboardOverview = () => {
             title: 'Price',
             dataIndex: 'price',
             key: 'price',
-            render: (price) => `$${price}`,
+            render: (price) => `₹${price}`,
         },
         {
             title: 'Stock',

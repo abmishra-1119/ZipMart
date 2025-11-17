@@ -251,11 +251,11 @@ const CheckoutPage = () => {
                                         <div className="flex-1">
                                             <h4 className="font-semibold text-gray-800">{product.title}</h4>
                                             <p className="text-gray-600 text-sm">Qty: {item.count}</p>
-                                            <p className="text-gray-600 text-sm">${product.price} each</p>
+                                            <p className="text-gray-600 text-sm">₹{product.price} each</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold text-green-600">
-                                                ${(product.price * item.count).toFixed(2)}
+                                                ₹{(product.price * item.count).toFixed(2)}
                                             </p>
                                             {product.stock < 10 && (
                                                 <Tag color="orange" className="text-xs mt-1">
@@ -367,7 +367,7 @@ const CheckoutPage = () => {
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Subtotal:</span>
-                                        <span>${orderSummary?.subtotal.toFixed(2)}</span>
+                                        <span>₹{orderSummary?.subtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Shipping:</span>
@@ -375,18 +375,18 @@ const CheckoutPage = () => {
                                             {orderSummary?.shipping === 0 ? (
                                                 <span className="text-green-600">FREE</span>
                                             ) : (
-                                                `$${orderSummary?.shipping.toFixed(2)}`
+                                                `₹${orderSummary?.shipping.toFixed(2)}`
                                             )}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Tax (10%):</span>
-                                        <span>${orderSummary?.tax.toFixed(2)}</span>
+                                        <span>₹{orderSummary?.tax.toFixed(2)}</span>
                                     </div>
                                     <Divider className="my-2" />
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Total:</span>
-                                        <span className="text-green-600">${orderSummary?.total.toFixed(2)}</span>
+                                        <span className="text-green-600">₹{orderSummary?.total.toFixed(2)}</span>
                                     </div>
                                 </div>
 
@@ -418,7 +418,7 @@ const CheckoutPage = () => {
                                     disabled={!selectedAddress}
                                     className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 border-none shadow-md"
                                 >
-                                    {placingOrder ? 'Placing Order...' : `Place Order $${orderSummary?.total.toFixed(2)}`}
+                                    {placingOrder ? 'Placing Order...' : `Place Order ₹${orderSummary?.total.toFixed(2)}`}
                                 </Button>
 
                                 {/* Security Notice */}

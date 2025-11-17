@@ -95,7 +95,7 @@ const ProductCard = ({ product }) => {
 
                         <div className="flex items-center justify-between">
                             <span className="text-2xl font-bold text-green-600">
-                                ${product.price}
+                                ₹{product.price}
                             </span>
                             {product.stock < 10 ? (
                                 <Tag color="red" className="text-xs">

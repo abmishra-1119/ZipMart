@@ -288,7 +288,8 @@ export const addRating = asyncHandler(async (req, res) => {
     await product.save();
 
     const populatedProduct = await Product.findById(product._id)
-        .populate('ratings.postedBy', 'name email');
+        .populate('ratings.postedBy', 'name email')
+        .populate("sellerId", "name email")
 
     return successResponse(res, 200, "Rating updated successfully", populatedProduct);
 });

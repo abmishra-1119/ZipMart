@@ -183,7 +183,7 @@ const OrderViewPage = () => {
             title: 'Price',
             dataIndex: 'price',
             key: 'price',
-            render: (price) => `$${price}`,
+            render: (price) => `₹${price}`,
         },
         {
             title: 'Quantity',
@@ -193,7 +193,7 @@ const OrderViewPage = () => {
         {
             title: 'Total',
             key: 'total',
-            render: (_, record) => `$${(record.price * record.count).toFixed(2)}`,
+            render: (_, record) => `₹${(record.price * record.count).toFixed(2)}`,
         },
         {
             title: 'Seller',
@@ -398,17 +398,17 @@ const OrderViewPage = () => {
                         <div className="text-right space-y-2">
                             <div className="flex justify-between max-w-xs ml-auto">
                                 <span className="text-gray-600">Subtotal:</span>
-                                <span>${order.totalPrice?.toFixed(2)}</span>
+                                <span>₹{order.totalPrice?.toFixed(2)}</span>
                             </div>
                             {order.discount > 0 && (
                                 <div className="flex justify-between max-w-xs ml-auto">
                                     <span className="text-gray-600">Discount:</span>
-                                    <span className="text-red-600">-${order.discount?.toFixed(2)}</span>
+                                    <span className="text-red-600">-₹{order.discount?.toFixed(2)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between max-w-xs ml-auto text-lg font-bold">
                                 <span>Total:</span>
-                                <span className="text-green-600">${order.finalPrice?.toFixed(2)}</span>
+                                <span className="text-green-600">₹{order.finalPrice?.toFixed(2)}</span>
                             </div>
                         </div>
                     </Card>

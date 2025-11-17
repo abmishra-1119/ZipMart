@@ -1,4 +1,3 @@
-// pages/seller/EditProductPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -206,7 +205,7 @@ const EditProductPage = () => {
                                 <Col xs={12}>
                                     <Form.Item
                                         name="price"
-                                        label="Price ($)"
+                                        label="Price (₹)"
                                         rules={[{ required: true, message: 'Please enter price' }]}
                                     >
                                         <InputNumber
@@ -297,7 +296,7 @@ const EditProductPage = () => {
                                 <Col xs={12} md={6}>
                                     <div className="text-center">
                                         <p className="text-2xl font-bold text-orange-600">
-                                            ${((product.price || 0) * (product.ordersCount || 0)).toFixed(2)}
+                                            ₹{((product.price || 0) * (product.ordersCount || 0)).toFixed(2)}
                                         </p>
                                         <p className="text-gray-600">Total Revenue</p>
                                     </div>

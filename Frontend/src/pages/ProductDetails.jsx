@@ -226,7 +226,7 @@ const ProductDetails = () => {
 
                                 {/* Price */}
                                 <div className="text-4xl font-bold text-green-600">
-                                    ${product.price}
+                                    ₹{product.price}
                                 </div>
 
                                 {/* Stock Status */}

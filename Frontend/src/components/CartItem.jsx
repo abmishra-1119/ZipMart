@@ -108,12 +108,12 @@ const CartItem = ({ item, product }) => {
                         {/* Price */}
                         <div className="text-right">
                             <p className="text-2xl font-bold text-green-600 mb-2">
-                                ${product.price}
+                                ₹{product.price}
                             </p>
                             <p className="text-gray-500 text-sm">
-                                ${product.price} × {item.count} =
+                                ₹{product.price} × {item.count} =
                                 <span className="font-semibold text-gray-800 ml-1">
-                                    ${(product.price * item.count).toFixed(2)}
+                                    ₹{(product.price * item.count).toFixed(2)}
                                 </span>
                             </p>
                         </div>
