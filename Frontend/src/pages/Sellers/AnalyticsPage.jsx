@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Row,
@@ -6,7 +6,6 @@ import {
   Card,
   Statistic,
   Table,
-  Tag,
   Progress,
   List,
   Avatar,
@@ -14,15 +13,9 @@ import {
   DatePicker,
   Select,
   Button,
-  Spin,
-  Alert,
 } from "antd";
 import {
-  DollarOutlined,
   ShoppingOutlined,
-  UserOutlined,
-  RiseOutlined,
-  FallOutlined,
   StarOutlined,
   ReloadOutlined,
   FilterOutlined,
@@ -32,30 +25,29 @@ import {
   getTopSellingProducts,
   getMyOrders,
 } from "../../features/seller/sellerSlice";
+import { RiMoneyRupeeCircleLine } from "react-icons/ri";
 
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const AnalyticsPage = () => {
   const dispatch = useDispatch();
 
-  const { totalRevenue, topSelling, orders, isLoading } = useSelector(
-    (state) => state.seller
-  );
+  const {
+    totalRevenue = 0,
+    topSelling = [],
+    orders = [],
+    isLoading,
+  } = useSelector((state) => state.seller);
 
-  // State for filters
+  // Filters
   const [dateRange, setDateRange] = useState(null);
   const [timeRange, setTimeRange] = useState("30days");
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [filteredRevenue, setFilteredRevenue] = useState(0);
-  const [filteredTopSelling, setFilteredTopSelling] = useState([]);
 
-  // Calculate date ranges
-  const getDateRange = (range) => {
+  const getDateRange = (rangeKey) => {
     const now = new Date();
     const start = new Date();
 
-    switch (range) {
+    switch (rangeKey) {
       case "7days":
         start.setDate(now.getDate() - 7);
         break;
@@ -75,57 +67,23 @@ const AnalyticsPage = () => {
     return { start, end: now };
   };
 
-  // Filter data based on date range
-  const filterData = () => {
-    let startDate, endDate;
-
-    if (dateRange && dateRange.length === 2) {
-      startDate = dateRange[0];
-      endDate = dateRange[1];
-    } else {
-      const range = getDateRange(timeRange);
-      startDate = range.start;
-      endDate = range.end;
-    }
-
-    // Filter orders by date range
-    const filtered = orders.filter((order) => {
-      const orderDate = new Date(order.orderDate);
-      return orderDate >= startDate && orderDate <= endDate;
-    });
-
-    setFilteredOrders(filtered);
-
-    // Calculate filtered revenue
-    const revenue = filtered
-      .filter((order) => order.status === "delivered")
-      .reduce((sum, order) => sum + order.finalPrice, 0);
-    setFilteredRevenue(revenue);
-
-    // Filter top selling products (you might want to implement this in the backend)
-    // For now, we'll use the existing topSelling data
-    setFilteredTopSelling(topSelling);
-  };
-
-  // Load initial data
+  // Load data from backend when timeRange changes
   useEffect(() => {
     const loadData = async () => {
-      const range = timeRange;
-      await Promise.all([
-        dispatch(getTotalRevenue({ range })),
-        dispatch(getTopSellingProducts({ range })),
-        dispatch(getMyOrders({ page: 1, limit: 100 })),
-      ]);
+      try {
+        const range = timeRange;
+        await Promise.all([
+          dispatch(getTotalRevenue({ range })),
+          dispatch(getTopSellingProducts({ range })),
+          dispatch(getMyOrders({ page: 1, limit: 100 })),
+        ]);
+      } catch (error) {
+        console.error("Failed to load analytics data:", error);
+      }
     };
+
     loadData();
   }, [dispatch, timeRange]);
-
-  // Apply filters when data or filters change
-  useEffect(() => {
-    if (orders.length > 0) {
-      filterData();
-    }
-  }, [orders, dateRange, timeRange]);
 
   const handleDateRangeChange = (dates) => {
     setDateRange(dates);
@@ -144,76 +102,166 @@ const AnalyticsPage = () => {
     dispatch(getMyOrders({ page: 1, limit: 100 }));
   };
 
-  // Calculate analytics data based on filtered orders
-  const analyticsData = {
-    totalOrders: filteredOrders.length,
-    completedOrders: filteredOrders.filter((o) => o.status === "delivered")
-      .length,
-    pendingOrders: filteredOrders.filter((o) => o.status === "pending").length,
-    shippedOrders: filteredOrders.filter((o) => o.status === "shipped").length,
-    cancelledOrders: filteredOrders.filter((o) => o.status === "cancelled")
-      .length,
-    totalProducts: filteredTopSelling.length,
-    totalRevenue: filteredRevenue,
-    averageOrderValue:
-      filteredOrders.length > 0 ? filteredRevenue / filteredOrders.length : 0,
-    conversionRate:
-      filteredOrders.length > 0
-        ? (filteredOrders.filter((o) => o.status === "delivered").length /
-            filteredOrders.length) *
-          100
-        : 0,
-  };
+  // Derived data (filtered orders, revenue, analytics, charts, activities)
+  const {
+    filteredOrders,
+    completedOrders,
+    pendingOrders,
+    shippedOrders,
+    cancelledOrders,
+    conversionRate,
+    averageOrderValue,
+    revenueData,
+    maxRevenue,
+    recentActivities,
+  } = useMemo(() => {
+    if (!orders || orders.length === 0) {
+      return {
+        filteredOrders: [],
+        completedOrders: 0,
+        pendingOrders: 0,
+        shippedOrders: 0,
+        cancelledOrders: 0,
+        conversionRate: 0,
+        averageOrderValue: 0,
+        revenueData: [],
+        maxRevenue: 0,
+        recentActivities: [],
+      };
+    }
 
-  // Generate revenue data for the selected time period
-  const generateRevenueData = () => {
-    if (!filteredOrders.length) return [];
+    let startDate;
+    let endDate;
 
+    if (dateRange && dateRange.length === 2) {
+      startDate = dateRange[0].startOf("day").toDate();
+      endDate = dateRange[1].endOf("day").toDate();
+    } else {
+      const range = getDateRange(timeRange);
+      startDate = range.start;
+      endDate = range.end;
+    }
+
+    const filtered = orders.filter((order) => {
+      if (!order.orderDate) return false;
+      const orderDate = new Date(order.orderDate);
+      return orderDate >= startDate && orderDate <= endDate;
+    });
+
+    const deliveredOrders = filtered.filter((o) => o.status === "delivered");
+    const pending = filtered.filter((o) => o.status === "pending").length;
+    const shipped = filtered.filter((o) => o.status === "shipped").length;
+    const cancelled = filtered.filter((o) => o.status === "cancelled").length;
+
+    const filteredRevenue = deliveredOrders.reduce(
+      (sum, order) => sum + (order.finalPrice || 0),
+      0
+    );
+
+    const avgOrderValue =
+      filtered.length > 0 ? filteredRevenue / filtered.length : 0;
+
+    const convRate =
+      filtered.length > 0
+        ? (deliveredOrders.length / filtered.length) * 100
+        : 0;
+
+    // Revenue trend data
     const revenueByPeriod = {};
-    const period =
-      timeRange === "7days"
+    const periodKey =
+      timeRange === "7days" || timeRange === "30days"
         ? "day"
-        : timeRange === "30days"
-          ? "day"
-          : timeRange === "90days"
-            ? "week"
-            : "month";
+        : timeRange === "90days"
+          ? "week"
+          : "month";
 
-    filteredOrders
-      .filter((order) => order.status === "delivered")
-      .forEach((order) => {
-        const date = new Date(order.orderDate);
-        let key;
+    deliveredOrders.forEach((order) => {
+      const date = new Date(order.orderDate);
+      let key;
 
-        switch (period) {
-          case "day":
-            key = date.toLocaleDateString();
-            break;
-          case "week":
-            key = `Week ${Math.ceil(date.getDate() / 7)}`;
-            break;
-          case "month":
-            key = date.toLocaleString("default", { month: "short" });
-            break;
-          default:
-            key = date.toLocaleDateString();
-        }
+      switch (periodKey) {
+        case "day":
+          key = date.toLocaleDateString();
+          break;
+        case "week":
+          key = `Week ${Math.ceil(date.getDate() / 7)}`;
+          break;
+        case "month":
+          key = date.toLocaleString("default", { month: "short" });
+          break;
+        default:
+          key = date.toLocaleDateString();
+      }
 
-        revenueByPeriod[key] = (revenueByPeriod[key] || 0) + order.finalPrice;
-      });
+      revenueByPeriod[key] =
+        (revenueByPeriod[key] || 0) + (order.finalPrice || 0);
+    });
 
-    return Object.entries(revenueByPeriod).map(([period, revenue]) => ({
-      period,
-      revenue,
+    const revenueDataArr = Object.entries(revenueByPeriod).map(
+      ([period, revenue]) => ({
+        period,
+        revenue,
+      })
+    );
+
+    const maxRev =
+      revenueDataArr.length > 0
+        ? Math.max(...revenueDataArr.map((r) => r.revenue))
+        : 0;
+
+    // Recent Activities
+    const recentActivitiesArr = filtered.slice(0, 5).map((order) => ({
+      id: order._id,
+      action: `New ${order.status} order`,
+      description: `Order #${order._id.slice(-8)} for ₹${order.finalPrice}`,
+      time: new Date(order.orderDate).toLocaleDateString(),
+      type: "order",
     }));
+
+    return {
+      filteredOrders: filtered,
+      completedOrders: deliveredOrders.length,
+      pendingOrders: pending,
+      shippedOrders: shipped,
+      cancelledOrders: cancelled,
+      conversionRate: convRate,
+      averageOrderValue: avgOrderValue,
+      revenueData: revenueDataArr,
+      maxRevenue: maxRev,
+      recentActivities: recentActivitiesArr,
+    };
+  }, [orders, dateRange, timeRange]);
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case "order":
+      default:
+        return <ShoppingOutlined style={{ color: "#1890ff" }} />;
+    }
   };
 
-  const revenueData = generateRevenueData();
-  const maxRevenue =
-    revenueData.length > 0
-      ? Math.max(...revenueData.map((item) => item.revenue))
-      : 0;
+  const getDateRangeText = () => {
+    if (dateRange && dateRange.length === 2) {
+      return `${dateRange[0].format("MMM DD, YYYY")} - ${dateRange[1].format(
+        "MMM DD, YYYY"
+      )}`;
+    }
 
+    switch (timeRange) {
+      case "7days":
+        return "Last 7 Days";
+      case "30days":
+        return "Last 30 Days";
+      case "90days":
+        return "Last 90 Days";
+      case "1year":
+        return "Last Year";
+      default:
+        return "Last 30 Days";
+    }
+  };
+
+  // Columns for top-selling products table
   const topProductsColumns = [
     {
       title: "Product",
@@ -261,47 +309,7 @@ const AnalyticsPage = () => {
     },
   ];
 
-  const recentActivities = filteredOrders.slice(0, 5).map((order) => ({
-    id: order._id,
-    action: `New ${order.status} order`,
-    description: `Order #${order._id.slice(-8)} for ₹${order.finalPrice}`,
-    time: new Date(order.orderDate).toLocaleDateString(),
-    type: "order",
-  }));
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case "order":
-        return <ShoppingOutlined style={{ color: "#1890ff" }} />;
-      case "warning":
-        return <FallOutlined style={{ color: "#faad14" }} />;
-      case "review":
-        return <StarOutlined style={{ color: "#52c41a" }} />;
-      case "payment":
-        return <DollarOutlined style={{ color: "#722ed1" }} />;
-      default:
-        return <UserOutlined />;
-    }
-  };
-
-  const getDateRangeText = () => {
-    if (dateRange && dateRange.length === 2) {
-      return `${dateRange[0].format("MMM DD, YYYY")} - ${dateRange[1].format("MMM DD, YYYY")}`;
-    }
-
-    switch (timeRange) {
-      case "7days":
-        return "Last 7 Days";
-      case "30days":
-        return "Last 30 Days";
-      case "90days":
-        return "Last 90 Days";
-      case "1year":
-        return "Last Year";
-      default:
-        return "Last 30 Days";
-    }
-  };
+  const totalOrders = filteredOrders.length;
 
   return (
     <div>
@@ -351,12 +359,13 @@ const AnalyticsPage = () => {
                 onChange={handleTimeRangeChange}
                 style={{ width: "100%" }}
                 suffixIcon={<FilterOutlined />}
-              >
-                <Option value="7days">Last 7 days</Option>
-                <Option value="30days">Last 30 days</Option>
-                <Option value="90days">Last 90 days</Option>
-                <Option value="1year">Last year</Option>
-              </Select>
+                options={[
+                  { value: "7days", label: "Last 7 days" },
+                  { value: "30days", label: "Last 30 days" },
+                  { value: "90days", label: "Last 90 days" },
+                  { value: "1year", label: "Last year" },
+                ]}
+              />
             </div>
           </Col>
           <Col xs={24} md={10} className="text-right">
@@ -365,8 +374,7 @@ const AnalyticsPage = () => {
                 Showing data for: <strong>{getDateRangeText()}</strong>
               </p>
               <p className="text-sm text-gray-500">
-                {filteredOrders.length} orders • ₹{filteredRevenue.toFixed(2)}{" "}
-                revenue
+                {totalOrders} orders • ₹{totalRevenue.toFixed(2)} revenue
               </p>
             </div>
           </Col>
@@ -379,8 +387,8 @@ const AnalyticsPage = () => {
           <Card>
             <Statistic
               title="Total Revenue"
-              value={filteredRevenue}
-              prefix={<DollarOutlined />}
+              value={totalRevenue}
+              prefix={<RiMoneyRupeeCircleLine />}
               valueStyle={{ color: "#3f8600" }}
               precision={2}
             />
@@ -390,7 +398,7 @@ const AnalyticsPage = () => {
           <Card>
             <Statistic
               title="Total Orders"
-              value={analyticsData.totalOrders}
+              value={totalOrders}
               prefix={<ShoppingOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
@@ -400,13 +408,13 @@ const AnalyticsPage = () => {
           <Card>
             <Statistic
               title="Conversion Rate"
-              value={analyticsData.conversionRate}
+              value={conversionRate}
               suffix="%"
               valueStyle={{ color: "#722ed1" }}
               precision={1}
             />
             <Progress
-              percent={Math.round(analyticsData.conversionRate)}
+              percent={Math.round(conversionRate)}
               size="small"
               showInfo={false}
             />
@@ -416,8 +424,8 @@ const AnalyticsPage = () => {
           <Card>
             <Statistic
               title="Avg Order Value"
-              value={analyticsData.averageOrderValue}
-              prefix={<DollarOutlined />}
+              value={averageOrderValue}
+              prefix={<RiMoneyRupeeCircleLine />}
               valueStyle={{ color: "#faad14" }}
               precision={2}
             />
@@ -439,10 +447,11 @@ const AnalyticsPage = () => {
           >
             <Table
               columns={topProductsColumns}
-              dataSource={filteredTopSelling.slice(0, 5)}
+              dataSource={topSelling.slice(0, 5)}
               pagination={false}
               size="small"
               scroll={{ x: 600 }}
+              rowKey={(record) => record._id}
             />
           </Card>
         </Col>
@@ -462,7 +471,7 @@ const AnalyticsPage = () => {
                 itemLayout="horizontal"
                 dataSource={recentActivities}
                 renderItem={(item) => (
-                  <List.Item>
+                  <List.Item key={item.id}>
                     <List.Item.Meta
                       avatar={getActivityIcon(item.type)}
                       title={item.action}
@@ -500,22 +509,22 @@ const AnalyticsPage = () => {
               {[
                 {
                   status: "Delivered",
-                  count: analyticsData.completedOrders,
+                  count: completedOrders,
                   color: "#52c41a",
                 },
                 {
                   status: "Pending",
-                  count: analyticsData.pendingOrders,
+                  count: pendingOrders,
                   color: "#faad14",
                 },
                 {
                   status: "Shipped",
-                  count: analyticsData.shippedOrders,
+                  count: shippedOrders,
                   color: "#1890ff",
                 },
                 {
                   status: "Cancelled",
-                  count: analyticsData.cancelledOrders,
+                  count: cancelledOrders,
                   color: "#ff4d4f",
                 },
               ].map((item) => (
@@ -528,10 +537,8 @@ const AnalyticsPage = () => {
                     <span>{item.count}</span>
                     <Progress
                       percent={
-                        analyticsData.totalOrders > 0
-                          ? Math.round(
-                              (item.count / analyticsData.totalOrders) * 100
-                            )
+                        totalOrders > 0
+                          ? Math.round((item.count / totalOrders) * 100)
                           : 0
                       }
                       strokeColor={item.color}

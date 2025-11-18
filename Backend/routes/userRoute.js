@@ -25,7 +25,7 @@ import {
     getAddresses,
     updateAddress,
     deleteAddress,
-    setDefaultAddress
+    setDefaultAddress, toggleUserStatus
 } from '../controllers/userController.js'
 import { adminMiddleware, authMiddleware } from '../middlewares/authMiddleware.js'
 import { validateRequest } from '../middlewares/validateRoute.js'
@@ -914,5 +914,6 @@ router.post("/address/add", authMiddleware, addAddress);
 router.put("/address/:index", authMiddleware, updateAddress);
 router.delete("/address/:index", authMiddleware, deleteAddress);
 router.put("/address/default/:index", authMiddleware, setDefaultAddress);
+router.put("/toggle-admin/:id", authMiddleware, adminMiddleware, toggleUserStatus)
 
 export default router

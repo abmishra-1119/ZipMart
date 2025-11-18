@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Layout,
   Menu,
@@ -8,8 +8,8 @@ import {
   Avatar,
   Button,
   Drawer,
-  Input
-} from 'antd';
+  Input,
+} from "antd";
 import {
   ShoppingCartOutlined,
   UserOutlined,
@@ -18,11 +18,11 @@ import {
   AppstoreOutlined,
   MenuOutlined,
   DashboardOutlined,
-  SearchOutlined
-} from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../features/auth/authSlice';
+  SearchOutlined,
+} from "@ant-design/icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../features/auth/authSlice";
 
 const { Header } = Layout;
 const { Search } = Input;
@@ -36,17 +36,17 @@ const Navbar = () => {
   const cartItems = cart && cart.length;
 
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleSearch = (value) => {
     if (value.trim()) {
       navigate(`/search?q=${encodeURIComponent(value.trim())}`);
-      setSearchQuery(''); // Clear search after submitting
+      setSearchQuery("");
     }
   };
 
@@ -54,33 +54,33 @@ const Navbar = () => {
   const profileMenu = {
     items: [
       {
-        key: 'profile',
+        key: "profile",
         icon: <ProfileOutlined />,
-        label: 'My Profile',
-        onClick: () => navigate('/profile'),
+        label: "My Profile",
+        onClick: () => navigate("/profile"),
       },
       {
-        key: 'dashboard',
+        key: "dashboard",
         icon: <DashboardOutlined />,
         label:
-          user?.role === 'admin'
-            ? 'Admin Dashboard'
-            : user?.role === 'seller'
-              ? 'Seller Dashboard'
-              : 'My Orders',
+          user?.role === "admin"
+            ? "Admin Dashboard"
+            : user?.role === "seller"
+              ? "Seller Dashboard"
+              : "My Orders",
         onClick: () => {
-          if (user?.role === 'admin') navigate('/admin/dashboard');
-          else if (user?.role === 'seller') navigate('/seller/dashboard');
-          else navigate('/orders');
+          if (user?.role === "admin") navigate("/admin/dashboard");
+          else if (user?.role === "seller") navigate("/seller/dashboard");
+          else navigate("/orders");
         },
       },
       {
-        type: 'divider',
+        type: "divider",
       },
       {
-        key: 'logout',
+        key: "logout",
         icon: <LogoutOutlined />,
-        label: 'Logout',
+        label: "Logout",
         danger: true,
         onClick: handleLogout,
       },
@@ -89,16 +89,19 @@ const Navbar = () => {
 
   const menuItems = [
     {
-      key: '/',
-      label: 'Home',
-      onClick: () => navigate('/'),
+      key: "/",
+      label: "Home",
+      onClick: () => {
+        navigate("/");
+        setMobileMenuVisible(false);
+      },
     },
-    {
-      key: '/products',
-      label: 'All Products',
-      icon: <AppstoreOutlined />,
-      onClick: () => navigate('/products'),
-    },
+    // {
+    //   key: '/products',
+    //   label: 'All Products',
+    //   icon: <AppstoreOutlined />,
+    //   onClick: () => navigate('/products'),
+    // },
   ];
 
   return (
@@ -106,9 +109,11 @@ const Navbar = () => {
       {/* Logo */}
       <div
         className="text-white text-2xl font-bold flex items-center cursor-pointer"
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
       >
-        <ShoppingCartOutlined style={{ marginRight: '8px', fontSize: '24px' }} />
+        <ShoppingCartOutlined
+          style={{ marginRight: "8px", fontSize: "24px" }}
+        />
         E-Shop
       </div>
 
@@ -131,17 +136,25 @@ const Navbar = () => {
         <Badge count={cartItems} showZero>
           <Button
             type="text"
-            icon={<ShoppingCartOutlined style={{ fontSize: '20px', color: 'white' }} />}
-            onClick={() => navigate('/cart')}
+            icon={
+              <ShoppingCartOutlined
+                style={{ fontSize: "20px", color: "white" }}
+              />
+            }
+            onClick={() => navigate("/cart")}
           />
         </Badge>
 
         {/* Auth */}
         {isAuthenticated ? (
-          <Dropdown menu={profileMenu} trigger={['click']} placement="bottomRight">
+          <Dropdown
+            menu={profileMenu}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
             <div className="flex items-center cursor-pointer">
               <Avatar
-                style={{ backgroundColor: '#87d068' }}
+                style={{ backgroundColor: "#87d068" }}
                 icon={<UserOutlined />}
               >
                 {user?.name?.charAt(0).toUpperCase()}
@@ -151,8 +164,8 @@ const Navbar = () => {
           </Dropdown>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={() => navigate('/login')}>Login</Button>
-            <Button type="primary" onClick={() => navigate('/signup')}>
+            <Button onClick={() => navigate("/login")}>Login</Button>
+            <Button type="primary" onClick={() => navigate("/signup")}>
               Sign Up
             </Button>
           </div>
@@ -165,7 +178,7 @@ const Navbar = () => {
           onClick={() => setMobileMenuVisible(true)}
           className="p-2 rounded-md hover:bg-[#112240] transition"
         >
-          <MenuOutlined style={{ fontSize: '20px', color: 'white' }} />
+          <MenuOutlined style={{ fontSize: "20px", color: "white" }} />
         </button>
       </div>
 
@@ -200,47 +213,56 @@ const Navbar = () => {
           items={[
             ...menuItems,
             {
-              key: 'cart',
+              key: "cart",
               label: `Cart (${cartItems})`,
               icon: <ShoppingCartOutlined />,
               onClick: () => {
-                navigate('/cart');
+                navigate("/cart");
                 setMobileMenuVisible(false);
               },
             },
             ...(isAuthenticated
               ? [
-                { type: 'divider' },
-                {
-                  key: 'logout',
-                  icon: <LogoutOutlined />,
-                  label: 'Logout',
-                  danger: true,
-                  onClick: () => {
-                    handleLogout();
-                    setMobileMenuVisible(false);
+                  { type: "divider" },
+                  {
+                    key: "profile",
+                    icon: <ProfileOutlined />,
+                    label: "My Profile",
+                    onClick: () => {
+                      navigate("/profile");
+                      setMobileMenuVisible(false);
+                    },
                   },
-                },
-              ]
+                  {
+                    key: "logout",
+                    icon: <LogoutOutlined />,
+                    label: "Logout",
+                    danger: true,
+                    onClick: () => {
+                      handleLogout();
+                      setMobileMenuVisible(false);
+                    },
+                  },
+                ]
               : [
-                { type: 'divider' },
-                {
-                  key: 'login',
-                  label: 'Login',
-                  onClick: () => {
-                    navigate('/login');
-                    setMobileMenuVisible(false);
+                  { type: "divider" },
+                  {
+                    key: "login",
+                    label: "Login",
+                    onClick: () => {
+                      navigate("/login");
+                      setMobileMenuVisible(false);
+                    },
                   },
-                },
-                {
-                  key: 'signup',
-                  label: 'Sign Up',
-                  onClick: () => {
-                    navigate('/signup');
-                    setMobileMenuVisible(false);
+                  {
+                    key: "signup",
+                    label: "Sign Up",
+                    onClick: () => {
+                      navigate("/signup");
+                      setMobileMenuVisible(false);
+                    },
                   },
-                },
-              ]),
+                ]),
           ]}
         />
       </Drawer>

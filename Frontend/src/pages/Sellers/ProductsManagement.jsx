@@ -10,7 +10,6 @@ import {
   Tag,
   Space,
   Modal,
-  message,
   Input,
   Select,
   Pagination,
@@ -46,6 +45,8 @@ const ProductsManagement = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     dispatch(getMyProducts({ page: currentPage, limit: pageSize }));
@@ -53,26 +54,25 @@ const ProductsManagement = () => {
 
   useEffect(() => {
     if (sellerMessage && isSuccess) {
-      message.success(sellerMessage);
+      toast.success(sellerMessage);
     }
   }, [sellerMessage, isSuccess]);
 
-  const handleDeleteProduct = (productId, productName) => {
-    Modal.confirm({
-      title: "Delete Product",
-      content: `Are you sure you want to delete "${productName}"? This action cannot be undone.`,
-      okText: "Yes, Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: async () => {
-        try {
-          await dispatch(deleteMyProduct(productId)).unwrap();
-          message.success("Product deleted successfully");
-        } catch (error) {
-          message.error(error || "Failed to delete product");
-        }
-      },
-    });
+  const openDeleteModal = (product) => {
+    setSelectedProduct(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedProduct) return;
+    try {
+      await dispatch(deleteMyProduct(selectedProduct._id)).unwrap();
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      toast.error(error || "Failed to delete product");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
   };
 
   const handleViewProduct = (productId) => {
@@ -176,7 +176,7 @@ const ProductsManagement = () => {
             size="small"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDeleteProduct(record._id, record.title)}
+            onClick={() => openDeleteModal(record)}
           >
             Delete
           </Button>
@@ -265,6 +265,21 @@ const ProductsManagement = () => {
           scroll={{ x: 1000 }}
         />
       </Card>
+      <Modal
+        title="Delete Product"
+        open={isDeleteModalOpen}
+        onOk={handleConfirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        okText="Yes, Delete"
+        okType="danger"
+        cancelText="Cancel"
+      >
+        <p>
+          Are you sure you want to delete{" "}
+          <strong>{selectedProduct?.title}</strong>? This action cannot be
+          undone.
+        </p>
+      </Modal>
     </div>
   );
 };
