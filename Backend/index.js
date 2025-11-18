@@ -40,13 +40,13 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://zip-mart.vercel.app/",
-      "https://zip-mart-git-main-abmishra-1119s-projects.vercel.app/",
-      "https://zip-mart-qsjwae7se-abmishra-1119s-projects.vercel.app/",
-    ], // your frontend URL
-    credentials: true, // allow cookies and auth headers
+      "https://zip-mart.vercel.app",
+      "https://zip-mart-git-main-abmishra-1119s-projects.vercel.app",
+      "https://zip-mart-qsjwae7se-abmishra-1119s-projects.vercel.app",
+    ], // Remove trailing slashes
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
 app.use(cookieParser());
