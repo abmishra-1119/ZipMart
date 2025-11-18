@@ -1,21 +1,12 @@
-// vite.config.js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+// https://vite.dev/config/
 export default defineConfig({
+  base: "/",
   plugins: [react(), tailwindcss()],
-  build: {
-    outDir: "dist",
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Manually splitting libraries into separate chunks
-          vendor: ["react", "react-dom", "axios"],
-          // You can also split based on custom criteria
-          utilities: ["some-large-utility-lib"],
-        },
-      },
-    },
-  },
+  // build: {
+  //   outDir: "dist",
+  // },
 });
