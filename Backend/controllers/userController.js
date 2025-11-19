@@ -369,7 +369,7 @@ export const changePassword = asyncHandler(async (req, res) => {
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) return res.status(401).json({ message: "Incorrect old password" });
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = newPassword
     await user.save();
 
     successResponse(res, 200, "Password changed successfully");

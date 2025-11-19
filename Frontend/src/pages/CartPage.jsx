@@ -10,7 +10,6 @@ import {
   Spin,
   Alert,
   Divider,
-  message,
   Modal,
 } from "antd";
 import {
@@ -28,26 +27,23 @@ const CartPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { cart, isLoading, user, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
-
-  // Use a more specific selector to avoid unnecessary re-renders
-  const cartItems = useSelector((state) => state.auth.cart);
-  const authLoading = useSelector((state) => state.auth.isLoading);
+  const {
+    cart: cartItems,
+    isLoading: authLoading,
+    isAuthenticated,
+  } = useSelector((state) => state.auth);
 
   const [cartProducts, setCartProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productCache, setProductCache] = useState(new Map());
+  const [emptyCartModal, setEmptyCartModal] = useState(false);
 
-  // Load cart when component mounts and user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getCart());
     }
   }, [dispatch, isAuthenticated]);
 
-  // Memoized function to fetch product details
   const fetchProductDetails = useCallback(
     async (productId) => {
       // Check cache first
@@ -70,7 +66,6 @@ const CartPage = () => {
     [dispatch, productCache]
   );
 
-  // Optimized product fetching with batching
   useEffect(() => {
     const fetchCartProducts = async () => {
       if (!cartItems || cartItems.length === 0) {
@@ -102,24 +97,19 @@ const CartPage = () => {
     return () => clearTimeout(timeoutId);
   }, [cartItems, fetchProductDetails]);
 
-  const handleEmptyCart = () => {
-    Modal.confirm({
-      title: "Empty Cart",
-      content: "Are you sure you want to remove all items from your cart?",
-      okText: "Yes, Empty Cart",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: async () => {
-        try {
-          await dispatch(emptyCart()).unwrap();
-          setCartProducts([]); // Clear local state immediately
-          setProductCache(new Map()); // Clear cache
-          toast.success("Cart emptied successfully");
-        } catch (error) {
-          toast.error(error || "Failed to empty cart");
-        }
-      },
-    });
+  const openEmptyCartModal = () => setEmptyCartModal(true);
+
+  const confirmEmptyCart = async () => {
+    try {
+      await dispatch(emptyCart()).unwrap();
+      setCartProducts([]);
+      setProductCache(new Map());
+      toast.success("Cart emptied successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to empty cart");
+    }
+    setEmptyCartModal(false);
   };
 
   const handleCheckout = () => {
@@ -223,7 +213,7 @@ const CartPage = () => {
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate(-1)}
-            className="mb-4"
+            className="!mb-4"
           >
             Back
           </Button>
@@ -242,8 +232,7 @@ const CartPage = () => {
               <Button
                 danger
                 icon={<DeleteOutlined />}
-                onClick={handleEmptyCart}
-                loading={authLoading}
+                onClick={openEmptyCartModal}
               >
                 Empty Cart
               </Button>
@@ -282,7 +271,7 @@ const CartPage = () => {
                           type="primary"
                           size="large"
                           icon={<ShoppingOutlined />}
-                          onClick={() => navigate("/products")}
+                          onClick={() => navigate("/")}
                         >
                           Start Shopping
                         </Button>
@@ -351,7 +340,7 @@ const CartPage = () => {
                       size="large"
                       icon={<ShoppingCartOutlined />}
                       onClick={handleCheckout}
-                      className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 border-none shadow-md"
+                      className="!w-full !h-12 !text-lg !bg-green-600 hover:!bg-green-700 !border-none !shadow-md"
                     >
                       Proceed to Checkout
                     </Button>
@@ -361,7 +350,7 @@ const CartPage = () => {
                       type="default"
                       size="large"
                       onClick={() => navigate("/")}
-                      className="w-full border-gray-300 hover:border-blue-500"
+                      className="!w-full !border-gray-300 hover:!border-blue-500"
                     >
                       Continue Shopping
                     </Button>
@@ -378,6 +367,20 @@ const CartPage = () => {
           )}
         </Row>
       </div>
+      <Modal
+        title="Empty Cart"
+        open={emptyCartModal}
+        onOk={confirmEmptyCart}
+        onCancel={() => setEmptyCartModal(false)}
+        okText="Yes, Empty Cart"
+        okType="danger"
+        cancelText="Cancel"
+      >
+        <p>Are you sure you want to remove all items from your cart?</p>
+        <p className="text-red-500 font-medium mt-2">
+          This action cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 };

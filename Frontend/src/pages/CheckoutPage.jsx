@@ -452,7 +452,7 @@ const CheckoutPage = () => {
                     loading={placingOrder || orderLoading}
                     onClick={handlePlaceOrder}
                     disabled={!selectedAddress}
-                    className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 border-none shadow-md"
+                    className="!w-full !h-12 !text-lg !bg-green-600 hover:!bg-green-700 !border-none !shadow-md"
                   >
                     {placingOrder
                       ? "Placing Order..."

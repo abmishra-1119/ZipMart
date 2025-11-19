@@ -24,19 +24,16 @@ const HomePage = () => {
     order: "desc",
   });
 
-  // Extract unique brands from products
   const brands = [...new Set(products.map((product) => product.brand))].filter(
     Boolean
   );
 
   useEffect(() => {
-    // Load initial products and categories
     dispatch(getAllProducts(filters));
     dispatch(getAllCategories());
   }, [dispatch]);
 
   useEffect(() => {
-    // Reload products when filters change
     dispatch(getAllProducts(filters));
   }, [filters, dispatch]);
 
@@ -44,7 +41,7 @@ const HomePage = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: 1, // Reset to first page when filters change
+      page: 1,
     }));
   };
 
@@ -54,7 +51,6 @@ const HomePage = () => {
       page,
       limit: pageSize,
     }));
-    // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -70,7 +66,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-100 py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
@@ -176,7 +172,7 @@ const HomePage = () => {
                             `${range[0]}-${range[1]} of ${total} items`
                           }
                           pageSizeOptions={["12", "24", "36", "48"]}
-                          className="pagination-custom"
+                          className="!pagination-custom"
                         />
                       </div>
                     )}
@@ -184,7 +180,7 @@ const HomePage = () => {
                 ) : (
                   <Empty
                     description="No products found matching your criteria"
-                    className="flex flex-col items-center justify-center h-64"
+                    className="!flex !flex-col !items-center !justify-center !h-64"
                   />
                 )}
               </>

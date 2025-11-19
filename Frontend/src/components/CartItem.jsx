@@ -85,9 +85,9 @@ const CartItem = ({ item, product }) => {
 
   if (!product) {
     return (
-      <Card className="mb-4 shadow-sm">
+      <Card className="!mb-4 !shadow-sm">
         <div className="flex items-center justify-center py-8 text-gray-500">
-          <Spin size="small" className="mr-2" />
+          <Spin size="small" className="!mr-2" />
           Loading product...
         </div>
       </Card>

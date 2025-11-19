@@ -889,7 +889,7 @@ router.get('/:id', validateRequest(getUserSchema, 'params'), getUserById)
  *       404:
  *         description: User not found
  */
-router.put('/',authMiddleware, validateRequest(updateUserSchema), updateUser)
+router.put('/',authMiddleware, updateUser)
 
 /**
  * @swagger

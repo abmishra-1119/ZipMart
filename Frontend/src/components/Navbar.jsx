@@ -114,7 +114,7 @@ const Navbar = () => {
         <ShoppingCartOutlined
           style={{ marginRight: "8px", fontSize: "24px" }}
         />
-        E-Shop
+        ZipMart
       </div>
 
       {/* Search Bar with Button */}

@@ -45,7 +45,7 @@ const ProductCard = ({ product }) => {
       className="w-full h-full border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer"
       onClick={handleViewDetails}
       cover={
-        <div className="h-64 overflow-hidden flex items-center justify-center bg-gray-100">
+        <div className="h-64 overflow-hidden flex items-center justify-center bg-white">
           <img
             alt={product.title}
             src={
@@ -67,10 +67,10 @@ const ProductCard = ({ product }) => {
           icon={<ShoppingCartOutlined />}
           loading={isAddingToCart}
           onClick={handleAddToCart}
-          className={`border-none ${
+          className={`!border-none ${
             isInCart
-              ? "bg-orange-500 hover:bg-orange-600"
-              : "bg-blue-600 hover:bg-blue-700"
+              ? "!bg-orange-500 hover:!bg-orange-600"
+              : "!bg-blue-600 hover:!bg-blue-700"
           }`}
         >
           {isInCart ? "Added" : "Add to Cart"}
@@ -78,7 +78,7 @@ const ProductCard = ({ product }) => {
         <Button
           icon={<EyeOutlined />}
           onClick={handleViewDetails}
-          className="text-gray-600 hover:text-blue-600"
+          className="!text-gray-600 hover:!text-blue-600"
         >
           View
         </Button>,
@@ -103,11 +103,11 @@ const ProductCard = ({ product }) => {
                 ₹{product.price}
               </span>
               {product.stock < 10 ? (
-                <Tag color="red" className="text-xs">
+                <Tag color="red" className="!text-xs">
                   Low Stock
                 </Tag>
               ) : (
-                <Tag color="green" className="text-xs">
+                <Tag color="green" className="!text-xs">
                   In Stock
                 </Tag>
               )}

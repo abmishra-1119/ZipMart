@@ -142,7 +142,7 @@ const ProductDetails = () => {
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate(-1)}
-          className="mb-6"
+          className="!mb-6"
         >
           Back
         </Button>
@@ -152,27 +152,30 @@ const ProductDetails = () => {
             message={productMessage}
             type="error"
             closable
-            className="mb-6"
+            className="!mb-6"
           />
         )}
 
         <Row gutter={[32, 32]}>
           {/* Product Images */}
           <Col xs={24} lg={12}>
-            <Card className="shadow-sm">
+            <Card className="!shadow-sm">
               <div className="flex flex-col items-center">
                 {/* Main Image - Fixed height issue */}
-                <div className="w-full max-h-96 mb-4 flex items-center justify-center bg-white rounded-lg overflow-hidden">
+                <div className="w-full h-96 mb-4 flex items-center justify-center bg-white rounded-lg overflow-hidden">
                   <Image
                     src={
                       product.images?.[selectedImage]?.url || product.thumbnail
                     }
                     alt={product.title}
-                    className="w-full h-auto max-h-96 object-scale-down"
-                    fallback="/placeholder-image.jpg"
-                    preview={{
-                      mask: <EyeOutlined />,
+                    width={"100%"}
+                    height={"100%"}
+                    style={{
+                      objectFit: "contain",
+                      padding: "8px",
                     }}
+                    fallback="/placeholder-image.jpg"
+                    preview={{ mask: <EyeOutlined /> }}
                   />
                 </div>
 
@@ -207,7 +210,7 @@ const ProductDetails = () => {
 
           {/* Product Details - Rest remains the same */}
           <Col xs={24} lg={12}>
-            <Card className="shadow-sm">
+            <Card className="!shadow-sm">
               <div className="space-y-6">
                 {/* Title and Brand */}
                 <div>
@@ -286,11 +289,11 @@ const ProductDetails = () => {
                     loading={isAddingToCart || authLoading}
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
-                    className={`w-full h-12 text-lg ${
+                    className={`!w-full !h-12 !text-lg ${
                       isInCart
-                        ? "bg-orange-500 hover:bg-orange-600"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    } border-none`}
+                        ? "!bg-orange-500 hover:!bg-orange-600"
+                        : "!bg-blue-600 hover:!bg-blue-700"
+                    } !border-none`}
                   >
                     {isInCart ? "Added to Cart" : "Add to Cart"}
                   </Button>
@@ -311,7 +314,7 @@ const ProductDetails = () => {
         <Row gutter={[32, 32]}>
           <Col xs={24} lg={12}>
             {/* Add Rating Form */}
-            <Card title="Add Your Review" className="shadow-sm">
+            <Card title="Add Your Review" className="!shadow-sm">
               {isAuthenticated ? (
                 <div className="space-y-4">
                   <div>
