@@ -24,7 +24,7 @@ const CartItem = ({ item, product }) => {
 
   const optimisticUpdate = (newQty) => {
     const newCart = cart.map((c) =>
-      c.productId === item.productId ? { ...c, count: newQty } : c
+      c.productId._id === product._id ? { ...c, count: newQty } : c
     );
     dispatch(updateCartLocally(newCart));
   };
@@ -39,13 +39,13 @@ const CartItem = ({ item, product }) => {
     try {
       await dispatch(
         updateCartItem({
-          productId: item.productId,
+          productId: product._id,
           count: value,
         })
       ).unwrap();
     } catch (error) {
       toast.error(error || "Failed to update quantity");
-      dispatch(getCart()); // Revert if API fails
+      dispatch(getCart());
     } finally {
       setUpdating(false);
     }
@@ -53,13 +53,13 @@ const CartItem = ({ item, product }) => {
 
   const handleRemove = async () => {
     const previousCart = [...cart];
-    const newCart = cart.filter((c) => c.productId !== item.productId);
+    const newCart = cart.filter((c) => c.productId._id !== product._id);
 
     dispatch(updateCartLocally(newCart)); // remove instantly
 
     setRemoving(true);
     try {
-      await dispatch(removeFromCart(item.productId)).unwrap();
+      await dispatch(removeFromCart(product._id)).unwrap(); // Use product._id
       toast.success("Item removed");
     } catch (error) {
       toast.error(error || "Failed to remove product");

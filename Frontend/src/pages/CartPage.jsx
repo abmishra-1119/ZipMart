@@ -19,7 +19,6 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { getCart, emptyCart } from "../features/auth/authSlice";
-import { getProductById } from "../features/product/productSlice";
 import CartItem from "../components/CartItem";
 import { toast } from "react-toastify";
 
@@ -35,7 +34,6 @@ const CartPage = () => {
 
   const [cartProducts, setCartProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productCache, setProductCache] = useState(new Map());
   const [emptyCartModal, setEmptyCartModal] = useState(false);
 
   useEffect(() => {
@@ -44,30 +42,8 @@ const CartPage = () => {
     }
   }, [dispatch, isAuthenticated]);
 
-  const fetchProductDetails = useCallback(
-    async (productId) => {
-      // Check cache first
-      if (productCache.has(productId)) {
-        return productCache.get(productId);
-      }
-
-      try {
-        const result = await dispatch(getProductById(productId)).unwrap();
-        if (result.data) {
-          // Update cache
-          setProductCache((prev) => new Map(prev).set(productId, result.data));
-          return result.data;
-        }
-      } catch (error) {
-        console.error(`Failed to fetch product ${productId}:`, error);
-        return null;
-      }
-    },
-    [dispatch, productCache]
-  );
-
   useEffect(() => {
-    const fetchCartProducts = async () => {
+    const processCartItems = () => {
       if (!cartItems || cartItems.length === 0) {
         setCartProducts([]);
         return;
@@ -75,27 +51,26 @@ const CartPage = () => {
 
       setLoadingProducts(true);
       try {
-        const productPromises = cartItems.map(async (item) => {
-          const product = await fetchProductDetails(item.productId);
-          return product ? { item, product } : null;
-        });
+        const processedProducts = cartItems.map((item) => ({
+          item: {
+            ...item,
+          },
+          product: item.productId,
+        }));
 
-        const results = await Promise.all(productPromises);
-        const validProducts = results.filter(Boolean);
-
-        setCartProducts(validProducts);
+        setCartProducts(processedProducts);
       } catch (error) {
-        console.error("Error fetching cart products:", error);
-        toast.error("Failed to load cart products. Please try again.");
+        console.error("Error processing cart items:", error);
+        toast.error("Failed to load cart items. Please try again.");
       } finally {
         setLoadingProducts(false);
       }
     };
 
-    // Add a small delay to prevent rapid re-fetches
-    const timeoutId = setTimeout(fetchCartProducts, 100);
+    // Add a small delay to prevent rapid re-processing
+    const timeoutId = setTimeout(processCartItems, 100);
     return () => clearTimeout(timeoutId);
-  }, [cartItems, fetchProductDetails]);
+  }, [cartItems]);
 
   const openEmptyCartModal = () => setEmptyCartModal(true);
 
@@ -103,7 +78,6 @@ const CartPage = () => {
     try {
       await dispatch(emptyCart()).unwrap();
       setCartProducts([]);
-      setProductCache(new Map());
       toast.success("Cart emptied successfully");
     } catch (err) {
       console.error(err);
@@ -131,6 +105,17 @@ const CartPage = () => {
     if (outOfStockItems.length > 0) {
       toast.error(
         "Some items in your cart are out of stock. Please remove them before checkout."
+      );
+      return;
+    }
+
+    // Check if any items exceed available stock
+    const exceededStockItems = cartProducts.filter(
+      ({ item, product }) => item.count > product.stock
+    );
+    if (exceededStockItems.length > 0) {
+      toast.error(
+        "Some items in your cart exceed available stock. Please adjust quantities before checkout."
       );
       return;
     }
@@ -247,7 +232,7 @@ const CartPage = () => {
               <div>
                 {cartProducts.map(({ item, product }) => (
                   <CartItem
-                    key={`${item.productId}-${item.count}`}
+                    key={`${product._id}-${item.count}`}
                     item={item}
                     product={product}
                   />

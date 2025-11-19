@@ -252,7 +252,7 @@ export const profile = asyncHandler(async (req, res) => {
 // Get user cart
 export const getCart = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const user = await User.findById(id).select("cart");
+    const user = await User.findById(id).select("cart").populate("cart.productId");
     successResponse(res, 200, "Cart fetched successfully", user.cart);
 });
 
@@ -279,7 +279,7 @@ export const deleteFromCart = asyncHandler(async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
         id, { $pull: { cart: { productId } } }, { new: true }
-    ).select("cart");
+    ).select("cart").populate("cart.productId");
 
     successResponse(res, 200, "Product removed from cart", user.cart);
 });
@@ -299,7 +299,7 @@ export const updateCart = asyncHandler(async (req, res) => {
     if (!productId || !count)
         return res.status(400).json({ message: "productId and count are required" });
 
-    const user = await User.findOneAndUpdate({ _id: id, "cart.productId": productId }, { $set: { "cart.$.count": count } }, { new: true }).select("cart");
+    const user = await User.findOneAndUpdate({ _id: id, "cart.productId": productId }, { $set: { "cart.$.count": count } }, { new: true }).select("cart").populate("cart.productId");
 
     if (!user) return res.status(404).json({ message: "User not found or product not in cart" });
 

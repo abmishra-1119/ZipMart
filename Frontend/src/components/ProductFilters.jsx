@@ -72,7 +72,7 @@ const ProductFilters = ({
           </Select>
         </div>
 
-        <Divider className="my-4" />
+        <Divider className="!my-4" />
 
         {/* Sort Options */}
         <div>
