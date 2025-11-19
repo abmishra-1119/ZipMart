@@ -45,12 +45,10 @@ const OrderViewPage = () => {
     const [updatingStatus, setUpdatingStatus] = useState(false);
 
     useEffect(() => {
-        // Find the order from the existing orders list
         const foundOrder = orders.find(o => o._id === orderId);
         if (foundOrder) {
             setOrder(foundOrder);
         } else {
-            // If order not found in current list, you might want to fetch it individually
             toast.error('Order not found');
             navigate('/seller/orders');
         }

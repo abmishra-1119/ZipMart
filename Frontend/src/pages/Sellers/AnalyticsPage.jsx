@@ -337,7 +337,7 @@ const AnalyticsPage = () => {
       {/* Filters */}
       <Card className="mb-6">
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8}>
+          {/* <Col xs={24} md={8}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Custom Date Range
@@ -348,8 +348,8 @@ const AnalyticsPage = () => {
                 style={{ width: "100%" }}
               />
             </div>
-          </Col>
-          <Col xs={24} md={6}>
+          </Col> */}
+          <Col xs={36} md={6}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Quick Range
@@ -368,7 +368,7 @@ const AnalyticsPage = () => {
               />
             </div>
           </Col>
-          <Col xs={24} md={10} className="text-right">
+          <Col xs={36} md={18} className="text-right">
             <div className="space-y-1">
               <p className="text-sm text-gray-600">
                 Showing data for: <strong>{getDateRangeText()}</strong>

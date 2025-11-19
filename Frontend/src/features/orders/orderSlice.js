@@ -68,8 +68,20 @@ const orderSlice = createSlice({
         currentOrder: null,
         loading: false,
         error: null,
+        // Add coupon state
+        coupon: null,
+        totalAfterDiscount: 0,
+        couponLoading: false,
     },
-    reducers: {},
+    reducers: {
+        clearCoupon: (state) => {
+            state.coupon = null;
+            state.totalAfterDiscount = 0;
+        },
+        setDiscountTotal: (state, action) => {
+            state.totalAfterDiscount = action.payload;
+        }
+    },
     extraReducers: (builder) => {
         builder
 
@@ -131,16 +143,22 @@ const orderSlice = createSlice({
 
             // VALIDATE COUPON
             .addCase(validateCoupon.pending, (state) => {
-                state.loading = true;
+                state.couponLoading = true;
+                state.error = null;
             })
             .addCase(validateCoupon.fulfilled, (state, action) => {
-                state.loading = false;
+                state.couponLoading = false;
+                state.coupon = action.payload;
+                // Calculate discounted total if you have the subtotal available
+                // You might want to pass subtotal as a parameter or calculate in component
             })
             .addCase(validateCoupon.rejected, (state, action) => {
-                state.loading = false;
+                state.couponLoading = false;
                 state.error = action.payload;
+                state.coupon = null;
             });
     },
 });
 
+export const { clearCoupon, setDiscountTotal } = orderSlice.actions;
 export default orderSlice.reducer;

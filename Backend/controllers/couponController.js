@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { successResponse } from "../utils/response.js";
 
 // Create new coupon
-export const createCoupon = asyncHandler(async(req, res) => {
+export const createCoupon = asyncHandler(async (req, res) => {
     const { name, discount, expiryDate } = req.body;
 
     if (!name || !discount) {
@@ -26,7 +26,7 @@ export const createCoupon = asyncHandler(async(req, res) => {
 });
 
 // Get all coupons with pagination
-export const getAllCoupons = asyncHandler(async(req, res) => {
+export const getAllCoupons = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -40,10 +40,10 @@ export const getAllCoupons = asyncHandler(async(req, res) => {
 
     const [coupons, totalCoupons] = await Promise.all([
         Coupon.find(filter)
-        .select("name discount expiryDate isActive createdAt")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
+            .select("name discount expiryDate isActive createdAt")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
         Coupon.countDocuments(filter)
     ]);
 
@@ -57,7 +57,7 @@ export const getAllCoupons = asyncHandler(async(req, res) => {
 });
 
 // Get coupon by ID
-export const getCouponById = asyncHandler(async(req, res) => {
+export const getCouponById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const coupon = await Coupon.findById(id);
@@ -69,7 +69,7 @@ export const getCouponById = asyncHandler(async(req, res) => {
 });
 
 // Get coupon by name
-export const getCouponByName = asyncHandler(async(req, res) => {
+export const getCouponByName = asyncHandler(async (req, res) => {
     const { name } = req.params;
 
     const coupon = await Coupon.findOne({ name });
@@ -89,7 +89,7 @@ export const getCouponByName = asyncHandler(async(req, res) => {
 });
 
 // Update coupon
-export const updateCoupon = asyncHandler(async(req, res) => {
+export const updateCoupon = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { name, discount, expiryDate, isActive } = req.body;
 
@@ -120,7 +120,7 @@ export const updateCoupon = asyncHandler(async(req, res) => {
 });
 
 // Delete coupon
-export const deleteCoupon = asyncHandler(async(req, res) => {
+export const deleteCoupon = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const coupon = await Coupon.findByIdAndDelete(id);
@@ -132,7 +132,7 @@ export const deleteCoupon = asyncHandler(async(req, res) => {
 });
 
 // Toggle coupon status
-export const toggleCouponStatus = asyncHandler(async(req, res) => {
+export const toggleCouponStatus = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const coupon = await Coupon.findById(id);
@@ -147,8 +147,11 @@ export const toggleCouponStatus = asyncHandler(async(req, res) => {
 });
 
 // Validate coupon
-export const validateCoupon = asyncHandler(async(req, res) => {
+export const validateCoupon = asyncHandler(async (req, res) => {
     const { name } = req.body;
+
+    console.log(req.body);
+
 
     if (!name) {
         return res.status(400).json({ message: "Coupon name is required" });
@@ -175,7 +178,7 @@ export const validateCoupon = asyncHandler(async(req, res) => {
 });
 
 // Get active coupons
-export const getActiveCoupons = asyncHandler(async(req, res) => {
+export const getActiveCoupons = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -191,10 +194,10 @@ export const getActiveCoupons = asyncHandler(async(req, res) => {
                 { expiryDate: { $gt: currentDate } }
             ]
         })
-        .select("name discount expiryDate")
-        .sort({ discount: -1 })
-        .skip(skip)
-        .limit(limit),
+            .select("name discount expiryDate")
+            .sort({ discount: -1 })
+            .skip(skip)
+            .limit(limit),
         Coupon.countDocuments({
             isActive: true,
             $or: [

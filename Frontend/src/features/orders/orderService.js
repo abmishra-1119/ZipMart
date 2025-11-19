@@ -25,7 +25,7 @@ const cancelOrder = async (orderId) => {
 };
 
 const validateCoupon = async (couponCode) => {
-    const res = await api.post("/coupons/validate", { code: couponCode });
+    const res = await api.post("/coupons/validate", { name: couponCode });
     return res.data;
 }
 

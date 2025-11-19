@@ -24,6 +24,7 @@ import {
 } from "@ant-design/icons";
 import {
   getMyOrders,
+  getTotalRevenue,
   updateOrderStatus,
 } from "../../features/seller/sellerSlice";
 import { toast } from "react-toastify";
@@ -36,13 +37,14 @@ const OrdersManagementPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { orders, isLoading } = useSelector((state) => state.seller);
+  const { orders, isLoading, totalRevenue } = useSelector((state) => state.seller);
 
   const [statusFilter, setStatusFilter] = useState("");
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     dispatch(getMyOrders({ page: 1, limit: 50 }));
+    dispatch(getTotalRevenue({ range: "all" }));
   }, [dispatch]);
 
   const handleUpdateStatus = async (orderId, newStatus) => {
@@ -190,9 +192,7 @@ const OrdersManagementPage = () => {
     total: orders.length,
     pending: orders.filter((o) => o.status === "pending").length,
     delivered: orders.filter((o) => o.status === "delivered").length,
-    revenue: orders
-      .filter((o) => o.status === "delivered")
-      .reduce((sum, order) => sum + order.finalPrice, 0),
+    revenue: totalRevenue
   };
 
   return (
@@ -247,7 +247,7 @@ const OrdersManagementPage = () => {
       {/* Filters */}
       <Card className="mb-6">
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} md={8}>
+          <Col xs={36} md={10}>
             <Search
               placeholder="Search orders..."
               allowClear
@@ -257,7 +257,7 @@ const OrdersManagementPage = () => {
               onChange={(e) => setSearchText(e.target.value)}
             />
           </Col>
-          <Col xs={24} md={6}>
+          <Col xs={36} md={9}>
             <Select
               placeholder="Filter by status"
               allowClear
@@ -274,9 +274,9 @@ const OrdersManagementPage = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} md={6}>
+          {/* <Col xs={24} md={6}>
             <RangePicker style={{ width: "100%" }} size="large" />
-          </Col>
+          </Col> */}
           <Col xs={24} md={4} className="text-right">
             <span className="text-gray-600">
               {filteredOrders.length} orders

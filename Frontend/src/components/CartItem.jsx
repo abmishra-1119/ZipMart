@@ -102,7 +102,7 @@ const CartItem = ({ item, product }) => {
       <Card>
         <div className="flex flex-col md:flex-row gap-4">
           {/* Product Image */}
-          <div className="flex-shrink-0 w-full md:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="flex-shrink-0 w-full md:w-32 h-32 bg-white rounded-lg overflow-hidden flex items-center justify-center">
             <img
               src={
                 product.thumbnail ||

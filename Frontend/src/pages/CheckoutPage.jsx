@@ -17,6 +17,8 @@ import {
   Tag,
   Empty,
   Descriptions,
+  Space,
+  message,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -24,8 +26,10 @@ import {
   PlusOutlined,
   CheckOutlined,
   ShoppingCartOutlined,
+  TagOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
-import { createOrder } from "../features/orders/orderSlice";
+import { createOrder, validateCoupon, clearCoupon } from "../features/orders/orderSlice";
 import { getAddresses, addAddress } from "../features/addresses/addressSlice";
 import { emptyCart } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
@@ -38,31 +42,43 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [form] = Form.useForm();
+  const [couponForm] = Form.useForm();
 
+  // Selectors
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const { addresses, loading: addressLoading } = useSelector(
-    (state) => state.addresses
-  );
-  const { loading: orderLoading, error: orderError } = useSelector(
-    (state) => state.orders
-  );
+  const { addresses, loading: addressLoading } = useSelector((state) => state.addresses);
+  const { loading: orderLoading, error: orderError, coupon, totalAfterDiscount, couponLoading } = useSelector((state) => state.orders);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [discountedTotal, setDiscountedTotal] = useState(0);
 
-  // Get cart data from navigation state
   const { cartProducts, orderSummary } = location.state || {};
 
-  // Load addresses on component mount
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getAddresses());
     }
   }, [dispatch, isAuthenticated]);
 
-  // Redirect if no cart data
+  useEffect(() => {
+    setAppliedCoupon(coupon);
+  }, [coupon]);
+
+  useEffect(() => {
+    if (appliedCoupon && orderSummary) {
+      const discountAmount = (orderSummary.subtotal * appliedCoupon.discount) / 100;
+      const newTotal = Math.max(0, orderSummary.total - discountAmount);
+      setDiscountedTotal(newTotal);
+    } else {
+      setDiscountedTotal(orderSummary?.total || 0);
+    }
+  }, [appliedCoupon, orderSummary]);
+
   useEffect(() => {
     if (!cartProducts || cartProducts.length === 0) {
       toast.warning("Your cart is empty");
@@ -70,18 +86,56 @@ const CheckoutPage = () => {
     }
   }, [cartProducts, navigate]);
 
-  // Handle new address submission
+  useEffect(() => {
+    if (addresses && addresses.length > 0) {
+      const defaultAddress = addresses.find(addr => addr.isDefault);
+
+      if (defaultAddress) {
+        setSelectedAddress(defaultAddress);
+      } else {
+        setSelectedAddress(addresses[0]);
+      }
+    }
+  }, [addresses]);
+
   const handleAddAddress = async (values) => {
     try {
       await dispatch(addAddress(values)).unwrap();
       toast.success("Address added successfully");
       setShowAddressForm(false);
       form.resetFields();
-      // Reload addresses to get the updated list
       dispatch(getAddresses());
     } catch (error) {
       toast.error(error || "Failed to add address");
     }
+  };
+
+  // Handle coupon application
+  const handleApplyCoupon = async (values) => {
+    const { couponCode } = values;
+
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      const result = await dispatch(validateCoupon(couponCode)).unwrap();
+      // console.log(result);
+      setAppliedCoupon(result.data);
+      setShowCouponForm(false);
+      couponForm.resetFields();
+      toast.success(`Coupon "${result.name}" applied successfully!`);
+    } catch (error) {
+      toast.error(error || "Failed to apply coupon");
+    }
+  };
+
+  // Handle coupon removal
+  const handleRemoveCoupon = () => {
+    dispatch(clearCoupon());
+    setAppliedCoupon(null);
+    toast.info("Coupon removed");
   };
 
   // Handle order placement
@@ -110,7 +164,7 @@ const CheckoutPage = () => {
     setPlacingOrder(true);
 
     try {
-      // Prepare order data according to your order model
+      // Prepare order data
       const orderData = {
         products: cartProducts.map(({ item, product }) => ({
           productId: product._id,
@@ -119,19 +173,20 @@ const CheckoutPage = () => {
           price: product.price,
         })),
         totalPrice: orderSummary.subtotal,
-        finalPrice: orderSummary.total,
+        finalPrice: discountedTotal,
         paymentMethod: paymentMethod,
         address: selectedAddress,
+        couponCode: appliedCoupon?.name || null,
       };
 
-      // Create order
       const result = await dispatch(createOrder(orderData)).unwrap();
 
-      // Clear cart after successful order
       await dispatch(emptyCart()).unwrap();
 
+      // Clear coupon
+      dispatch(clearCoupon());
+
       toast.success("Order placed successfully!");
-      // Redirect to order confirmation page
       navigate(`/order-confirmation/${result.order._id}`);
     } catch (error) {
       toast.error(error || "Failed to place order");
@@ -142,15 +197,14 @@ const CheckoutPage = () => {
 
   // Address card component
   const AddressCard = ({ address, isSelected, onSelect }) => {
-    const isDefault = addresses.find((a) => a._id === address._id)?.isDefault;
+    const isDefault = address.isDefault;
 
     return (
       <Card
-        className={`cursor-pointer border-2 transition-all ${
-          isSelected
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-200 hover:border-gray-300"
-        }`}
+        className={`cursor-pointer border-2 transition-all ${isSelected
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-200 hover:border-gray-300"
+          }`}
         onClick={() => onSelect(address)}
       >
         <div className="flex justify-between items-start">
@@ -183,7 +237,7 @@ const CheckoutPage = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4">
           <Alert
-            toast="Authentication Required"
+            message="Authentication Required"
             description="Please log in to complete your purchase."
             type="warning"
             showIcon
@@ -230,14 +284,8 @@ const CheckoutPage = () => {
           </p>
         </div>
 
-        {orderError && (
-          <Alert toast={orderError} type="error" closable className="mb-6" />
-        )}
-
         <Row gutter={[32, 32]}>
-          {/* Left Column - Order Details, Delivery & Payment */}
           <Col xs={24} lg={16}>
-            {/* Order Items Summary */}
             <div className="mb-4 shadow-sm">
               <Card title="Order Items">
                 <div className="space-y-4">
@@ -390,14 +438,63 @@ const CheckoutPage = () => {
           {/* Right Column - Order Summary */}
           <Col xs={24} lg={8}>
             <div className="sticky top-20 shadow-sm">
-              <Card title="Order Summary">
+              <Card
+                title="Order Summary"
+                extra={
+                  <Button
+                    type="link"
+                    icon={<TagOutlined />}
+                    onClick={() => setShowCouponForm(true)}
+                    size="small"
+                  >
+                    {appliedCoupon ? "Change Coupon" : "Apply Coupon"}
+                  </Button>
+                }
+              >
                 <div className="space-y-4">
+                  {/* Applied Coupon Display */}
+                  {appliedCoupon && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <Tag color="green" className="mb-1">
+                            COUPON APPLIED
+                          </Tag>
+                          <p className="font-semibold text-green-800">
+                            {appliedCoupon.name}
+                          </p>
+                          <p className="text-green-600 text-sm">
+                            {appliedCoupon.discount}% OFF
+                          </p>
+                        </div>
+                        <Button
+                          type="text"
+                          icon={<CloseOutlined />}
+                          onClick={handleRemoveCoupon}
+                          size="small"
+                          danger
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Price Breakdown */}
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal:</span>
                       <span>₹{orderSummary?.subtotal.toFixed(2)}</span>
                     </div>
+
+                    {/* Coupon Discount */}
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Coupon Discount ({appliedCoupon.discount}%):</span>
+                        <span>
+                          -₹{((orderSummary?.subtotal * appliedCoupon.discount) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between">
                       <span className="text-gray-600">Shipping:</span>
                       <span>
@@ -416,9 +513,16 @@ const CheckoutPage = () => {
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total:</span>
                       <span className="text-green-600">
-                        ₹{orderSummary?.total.toFixed(2)}
+                        ₹{discountedTotal.toFixed(2)}
                       </span>
                     </div>
+
+                    {/* Savings Display */}
+                    {appliedCoupon && discountedTotal < orderSummary?.total && (
+                      <div className="text-sm text-green-600 text-right">
+                        You save ₹{(orderSummary?.total - discountedTotal).toFixed(2)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Selected Address Preview */}
@@ -456,7 +560,7 @@ const CheckoutPage = () => {
                   >
                     {placingOrder
                       ? "Placing Order..."
-                      : `Place Order ₹${orderSummary?.total.toFixed(2)}`}
+                      : `Place Order ₹${discountedTotal.toFixed(2)}`}
                   </Button>
 
                   {/* Security Notice */}
@@ -488,7 +592,7 @@ const CheckoutPage = () => {
                   name="house"
                   label="House/Flat No. & Building"
                   rules={[
-                    { required: true, toast: "Please enter house/flat number" },
+                    { required: true, message: "Please enter house/flat number" },
                   ]}
                 >
                   <Input placeholder="e.g., 101, Skyline Apartments" />
@@ -508,7 +612,7 @@ const CheckoutPage = () => {
                 <Form.Item
                   name="city"
                   label="City"
-                  rules={[{ required: true, toast: "Please enter city" }]}
+                  rules={[{ required: true, message: "Please enter city" }]}
                 >
                   <Input placeholder="e.g., Mumbai" />
                 </Form.Item>
@@ -517,7 +621,7 @@ const CheckoutPage = () => {
                 <Form.Item
                   name="state"
                   label="State"
-                  rules={[{ required: true, toast: "Please enter state" }]}
+                  rules={[{ required: true, message: "Please enter state" }]}
                 >
                   <Input placeholder="e.g., Maharashtra" />
                 </Form.Item>
@@ -527,10 +631,10 @@ const CheckoutPage = () => {
                   name="pincode"
                   label="Pincode"
                   rules={[
-                    { required: true, toast: "Please enter pincode" },
+                    { required: true, message: "Please enter pincode" },
                     {
                       pattern: /^[1-9][0-9]{5}$/,
-                      toast: "Please enter valid pincode",
+                      message: "Please enter valid pincode",
                     },
                   ]}
                 >
@@ -547,6 +651,65 @@ const CheckoutPage = () => {
               <Button onClick={() => setShowAddressForm(false)}>Cancel</Button>
               <Button type="primary" htmlType="submit">
                 Save Address
+              </Button>
+            </div>
+          </Form>
+        </Modal>
+
+        {/* Apply Coupon Modal */}
+        <Modal
+          title="Apply Coupon Code"
+          open={showCouponForm}
+          onCancel={() => {
+            setShowCouponForm(false);
+            couponForm.resetFields();
+          }}
+          footer={null}
+          width={400}
+        >
+          <Form form={couponForm} layout="vertical" onFinish={handleApplyCoupon}>
+            <Form.Item
+              name="couponCode"
+              label="Enter Coupon Code"
+              rules={[
+                { required: true, message: "Please enter coupon code" },
+              ]}
+            >
+              <Input
+                placeholder="e.g., SAVE10"
+                size="large"
+                disabled={couponLoading}
+              />
+            </Form.Item>
+
+            {appliedCoupon && (
+              <Alert
+                message={
+                  <div>
+                    <strong>{appliedCoupon.name}</strong> - {appliedCoupon.discount}% OFF
+                  </div>
+                }
+                description={`Save ₹${((orderSummary?.subtotal * appliedCoupon.discount) / 100).toFixed(2)} on your order`}
+                type="success"
+                showIcon
+                className="mb-4"
+              />
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                onClick={() => setShowCouponForm(false)}
+                disabled={couponLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={couponLoading}
+                icon={<TagOutlined />}
+              >
+                Apply Coupon
               </Button>
             </div>
           </Form>
