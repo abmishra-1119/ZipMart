@@ -29,9 +29,9 @@ const resetPassword = async (data) => {
 };
 
 const logout = async () => {
-  await api.post("users/logout");
   localStorage.removeItem("userToken");
   localStorage.removeItem("user");
+  await api.post("users/logout");
 };
 
 // Update user details

@@ -94,8 +94,9 @@ export const login = asyncHandler(async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -119,8 +120,9 @@ export const logoutUser = asyncHandler(async (req, res) => {
 
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "lax", // or "none" if cross-origin + HTTPS
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
+        sameSite: "none",
+        path: "/",
     });
 
     successResponse(res, 200, "Logged out successfully");
@@ -184,8 +186,9 @@ export const refreshToken = asyncHandler(async (req, res) => {
     // send new refresh token cookie
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
