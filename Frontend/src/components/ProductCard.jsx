@@ -14,7 +14,9 @@ const ProductCard = ({ product }) => {
   const { isAuthenticated, cart } = useSelector((state) => state.auth);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const isInCart = cart?.some((item) => item.productId === product._id);
+  // console.log(cart);
+
+  const isInCart = cart?.some((item) => item.productId._id === product._id);
 
   const handleViewDetails = () => {
     navigate(`/products/${product._id}`);

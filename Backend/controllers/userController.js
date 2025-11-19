@@ -76,7 +76,7 @@ export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     // console.log(req.body);
 
-    const find = await User.findOne({ email });
+    const find = await User.findOne({ email }).populate('cart.productId');
     const userAgent = req.headers["user-agent"];
 
 
@@ -245,7 +245,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
 // Get current user profile
 export const profile = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const user = await User.findById(id).select("name email age role cart addresses avatar createdAt updatedAt ordersCount");
+    const user = await User.findById(id).select("name email age role cart addresses avatar createdAt updatedAt ordersCount").populate("cart.productId");
     successResponse(res, 200, "Profile fetched successfully", user);
 });
 

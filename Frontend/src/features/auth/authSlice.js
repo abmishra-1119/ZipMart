@@ -335,7 +335,6 @@ const authSlice = createSlice({
         state.message = "";
         // Update localStorage
         localStorage.setItem("user", JSON.stringify(action.payload));
-        localStorage.setItem("cart", JSON.stringify(action.payload.cart));
       })
       .addCase(getProfile.rejected, (state, action) => {
         state.isLoading = false;
