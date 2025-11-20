@@ -8,7 +8,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // Allowed FROM emails:
 // 1. onboarding@resend.dev (works without domain)
 // 2. noreply@yourdomain.com (after domain verification)
-const FROM_EMAIL = "ZipMart <onboarding@resend.dev>";
+const FROM_EMAIL = "ZipMart<onboarding@resend.dev>";
+
+// console.log(resend);
 
 const OTP_EMAIL_TEMPLATE = (otp, title, instruction) => {
     const appName = "ZipMart";
@@ -80,6 +82,8 @@ export const sendOtpEmail = async (email, otp) => {
     const title = "Verify Your Identity";
     const instruction =
         "Use the following One-Time Password (OTP) to complete your login or requested action.";
+
+    console.log(email);
 
     await resend.emails.send({
         from: FROM_EMAIL,
