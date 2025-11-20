@@ -148,7 +148,7 @@ export const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.params.id;
         const order = await Order.findById(orderId)
-            .select('user products orderDate status totalPrice finalPrice paymentMethod discount address refundProcess refundMsg')
+            .select('user products orderDate status totalPrice finalPrice paymentMethod discount address refundProcess refundMsg refundTime createdAt updatedAt')
             .populate('user', 'name email phone')
             .populate('coupon', 'name discount')
             .populate('products.productId', 'title price thumbnail')
@@ -273,7 +273,7 @@ export const cancelOrder = async (req, res) => {
         const updateData = { status: 'cancelled' };
 
         if (order.paymentMethod !== 'COD') {
-            updateData.refundProcess = 'processing';
+            updateData.refundProcess = 'initiated';
             updateData.refundTime = new Date();
             updateData.refundMsg = 'Refund will be initiated in 7 working days';
         }

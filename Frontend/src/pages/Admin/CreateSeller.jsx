@@ -7,7 +7,6 @@ import {
   Input,
   Button,
   Select,
-  message,
   Row,
   Col,
   Divider,
@@ -24,6 +23,7 @@ import {
   CheckCircleOutlined,
 } from "@ant-design/icons";
 import { adminCreateUser } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 const { Step } = Steps;
@@ -33,11 +33,9 @@ const CreateSeller = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  const {
-    isLoading,
-    isSuccess,
-    message: responseMessage,
-  } = useSelector((state) => state.admin);
+  const { isLoading, message: responseMessage } = useSelector(
+    (state) => state.admin
+  );
 
   const [currentStep, setCurrentStep] = useState(0);
   const [createdSeller, setCreatedSeller] = useState(null);
@@ -53,9 +51,9 @@ const CreateSeller = () => {
 
       setCreatedSeller(result.user || result); // Adjust based on your API response
       setCurrentStep(1);
-      message.success("Seller account created successfully!");
+      toast.success("Seller account created successfully!");
     } catch (error) {
-      message.error(error || "Failed to create seller account");
+      toast.error(error || "Failed to create seller account");
     }
   };
 

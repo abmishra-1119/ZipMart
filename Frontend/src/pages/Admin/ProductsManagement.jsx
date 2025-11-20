@@ -10,7 +10,6 @@ import {
   Input,
   Select,
   Modal,
-  message,
   Image,
 } from "antd";
 import {
@@ -22,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { getAllProducts } from "../../features/product/productSlice";
 import { adminDeleteProduct } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -62,11 +62,11 @@ const AdminProductsManagement = () => {
 
     try {
       await dispatch(adminDeleteProduct(productToDelete._id)).unwrap();
-      message.success("Product deleted successfully");
+      toast.success("Product deleted successfully");
       // Refresh the products list
       dispatch(getAllProducts({ page: currentPage, limit: pageSize }));
     } catch (error) {
-      message.error(error?.message || "Failed to delete product");
+      toast.error(error?.message || "Failed to delete product");
     } finally {
       setDeleteModalVisible(false);
       setProductToDelete(null);

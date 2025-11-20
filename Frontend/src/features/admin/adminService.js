@@ -49,8 +49,12 @@ const getAllOrders = async ({ limit = 10, page = 1 }) => {
   return response.data;
 };
 
-const updateRefund = async (orderId, status) => {
-  const response = await api.put(`orders/refund/${orderId}`, { status });
+const updateRefund = async (orderId, status, refundProcess, refundMsg) => {
+  const response = await api.put(`orders/refund/${orderId}`, {
+    status,
+    refundProcess,
+    refundMsg,
+  });
   return response.data;
 };
 
@@ -140,6 +144,8 @@ const adminToggleUserStatus = async (id) => {
   const res = await api.put(`users/toggle-admin/${id}`);
   return res.data;
 };
+
+// Create a
 
 // ------------------------------
 export const adminProductService = {

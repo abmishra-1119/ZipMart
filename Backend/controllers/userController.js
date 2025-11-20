@@ -79,7 +79,7 @@ export const login = asyncHandler(async (req, res) => {
     const find = await User.findOne({ email }).populate('cart.productId');
     const userAgent = req.headers["user-agent"];
 
-
+    console.log(find)
 
     if (!find) return res.status(404).json({ error: "Invalid email address" });
 
@@ -127,7 +127,6 @@ export const logoutUser = asyncHandler(async (req, res) => {
 
     successResponse(res, 200, "Logged out successfully");
 });
-
 
 // Refresh access token using refresh token
 export const refreshToken = asyncHandler(async (req, res) => {
@@ -264,7 +263,7 @@ export const addToCart = asyncHandler(async (req, res) => {
     const { productId, count = 1 } = req.body;
     const { id } = req.user;
 
-    const user = await User.findById(id);
+    const user = await User.findById(id,);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const existingProduct = user.cart.find((item) => item.productId.toString() === productId);
@@ -272,7 +271,12 @@ export const addToCart = asyncHandler(async (req, res) => {
     else user.cart.push({ productId, count });
 
     await user.save();
-    successResponse(res, 200, "Product added/updated in cart", user.cart);
+
+    const populatedUser = await User.findById(id)
+        .populate("cart.productId")
+        .lean();
+
+    successResponse(res, 200, "Product added/updated in cart", populatedUser.cart);
 });
 
 // Remove product from cart

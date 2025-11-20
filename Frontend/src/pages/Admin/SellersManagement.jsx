@@ -1,4 +1,3 @@
-// components/admin/SellersManagement.jsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +9,6 @@ import {
   Space,
   Input,
   Modal,
-  message,
   Badge,
   Avatar,
   Row,
@@ -30,6 +28,7 @@ import {
   adminGetAllSellers,
   adminDeleteUserById,
 } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
 
@@ -67,10 +66,10 @@ const SellersManagement = () => {
 
     try {
       await dispatch(adminDeleteUserById(sellerToDelete._id)).unwrap();
-      message.success("Seller deleted successfully");
+      toast.success("Seller deleted successfully");
       dispatch(adminGetAllSellers({ page: currentPage, limit: pageSize }));
     } catch (error) {
-      message.error(error?.message || "Failed to delete seller");
+      toast.error(error?.message || "Failed to delete seller");
     } finally {
       setDeleteModalVisible(false);
       setSellerToDelete(null);

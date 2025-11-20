@@ -100,9 +100,14 @@ export const adminGetAllOrders = createAsyncThunk(
 // Update refund
 export const adminUpdateRefund = createAsyncThunk(
   "admin/updateRefund",
-  async ({ orderId, status }, thunkAPI) => {
+  async ({ orderId, status, refundProcess, refundMsg }, thunkAPI) => {
     try {
-      return await adminProductService.updateRefund(orderId, status);
+      return await adminProductService.updateRefund(
+        orderId,
+        status,
+        refundProcess,
+        refundMsg
+      );
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }

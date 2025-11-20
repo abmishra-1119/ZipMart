@@ -385,7 +385,7 @@ router.put('/:id', authMiddleware, adminMiddleware, updateCoupon)
  *       401:
  *         description: Unauthorized
  */
-router.patch('/:id/toggle', authMiddleware, adminMiddleware, toggleCouponStatus)
+router.put('/:id/toggle', authMiddleware, adminMiddleware, toggleCouponStatus)
 
 /**
  * @swagger

@@ -242,275 +242,283 @@ const ProfilePage = () => {
         <Row gutter={[32, 32]}>
           {/* Left Sidebar - Profile Summary */}
           <Col xs={24} lg={8}>
-            <Card className="text-center shadow-sm sticky top-4">
-              {/* Avatar Section */}
-              <div className="mb-6">
-                <div className="relative inline-block">
-                  <Avatar
-                    size={120}
-                    src={user?.avatar?.url}
-                    icon={<UserOutlined />}
-                    className="border-4 border-white shadow-lg"
-                  />
-                  <Upload {...uploadProps}>
-                    <Button
-                      type="primary"
-                      shape="circle"
-                      icon={<CameraOutlined />}
-                      size="small"
-                      loading={uploadingAvatar}
-                      className="absolute bottom-0 right-0 shadow-md"
+            <div className="text-center shadow-sm sticky top-20">
+              <Card>
+                {/* Avatar Section */}
+                <div className="mb-6">
+                  <div className="relative inline-block">
+                    <Avatar
+                      size={120}
+                      src={user?.avatar?.url}
+                      icon={<UserOutlined />}
+                      className="border-4 border-white shadow-lg"
                     />
-                  </Upload>
+                    <Upload {...uploadProps}>
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<CameraOutlined />}
+                        size="small"
+                        loading={uploadingAvatar}
+                        className="absolute bottom-0 right-0 shadow-md"
+                      />
+                    </Upload>
+                  </div>
+                  <h2 className="text-xl font-semibold mt-4 text-gray-800">
+                    {user?.name}
+                  </h2>
+                  <p className="text-gray-600">{user?.email}</p>
+                  <Tag color="blue" className="mt-2">
+                    {user?.role}
+                  </Tag>
                 </div>
-                <h2 className="text-xl font-semibold mt-4 text-gray-800">
-                  {user?.name}
-                </h2>
-                <p className="text-gray-600">{user?.email}</p>
-                <Tag color="blue" className="mt-2">
-                  {user?.role}
-                </Tag>
-              </div>
 
-              {/* Quick Stats */}
-              <Divider />
-              <div className="space-y-3 text-left">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Member since:</span>
-                  <span className="font-medium">
-                    {user?.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </span>
+                {/* Quick Stats */}
+                <Divider />
+                <div className="space-y-3 text-left">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Member since:</span>
+                    <span className="font-medium">
+                      {user?.createdAt
+                        ? new Date(user.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Orders:</span>
+                    <span className="font-medium">
+                      {user?.ordersCount || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Default Address:</span>
+                    <span className="font-medium">
+                      {addresses?.find((addr) => addr.isDefault)
+                        ? "Set"
+                        : "Not Set"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Orders:</span>
-                  <span className="font-medium">{user?.ordersCount || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Default Address:</span>
-                  <span className="font-medium">
-                    {addresses?.find((addr) => addr.isDefault)
-                      ? "Set"
-                      : "Not Set"}
-                  </span>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </Col>
 
           {/* Right Content - Tabs */}
           <Col xs={24} lg={16}>
-            <Card className="shadow-sm">
-              <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
-                {/* Profile Information Tab */}
-                <TabPane tab="Profile Information" key="profile">
-                  <div className="max-w-2xl">
+            <div className="shadow-sm">
+              <Card>
+                <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
+                  {/* Profile Information Tab */}
+                  <TabPane tab="Profile Information" key="profile">
+                    <div className="max-w-2xl">
+                      <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-semibold">
+                          Personal Information
+                        </h3>
+                        <Button
+                          icon={<EditOutlined />}
+                          onClick={() => setEditingProfile(!editingProfile)}
+                        >
+                          {editingProfile ? "Cancel Edit" : "Edit Profile"}
+                        </Button>
+                      </div>
+
+                      <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleProfileUpdate}
+                        initialValues={{
+                          name: user?.name,
+                          email: user?.email,
+                          age: user?.age,
+                        }}
+                      >
+                        <Row gutter={16}>
+                          <Col xs={24} md={12}>
+                            <Form.Item
+                              name="name"
+                              label="Full Name"
+                              rules={[
+                                {
+                                  required: true,
+                                  toast: "Please enter your name",
+                                },
+                              ]}
+                            >
+                              <Input
+                                disabled={!editingProfile}
+                                prefix={<UserOutlined />}
+                              />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item name="email" label="Email Address">
+                              <Input disabled type="email" />
+                            </Form.Item>
+                          </Col>
+                          <Col xs={24} md={12}>
+                            <Form.Item name="age" label="Age">
+                              <Input disabled={!editingProfile} type="number" />
+                            </Form.Item>
+                          </Col>
+                        </Row>
+
+                        {editingProfile && (
+                          <div className="flex gap-2 justify-end">
+                            <Button onClick={() => setEditingProfile(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="primary" htmlType="submit">
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
+                      </Form>
+                    </div>
+                  </TabPane>
+
+                  {/* Change Password Tab */}
+                  <TabPane tab="Change Password" key="password">
+                    <div className="max-w-2xl">
+                      <h3 className="text-lg font-semibold mb-6">
+                        Update Password
+                      </h3>
+                      <Form
+                        form={passwordForm}
+                        layout="vertical"
+                        onFinish={handlePasswordChange}
+                      >
+                        <Form.Item
+                          name="oldPassword"
+                          label="Current Password"
+                          rules={[
+                            {
+                              required: true,
+                              toast: "Please enter your current password",
+                            },
+                          ]}
+                        >
+                          <Input.Password
+                            prefix={<LockOutlined />}
+                            placeholder="Enter current password"
+                          />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="newPassword"
+                          label="New Password"
+                          rules={[
+                            {
+                              required: true,
+                              toast: "Please enter new password",
+                            },
+                            {
+                              min: 6,
+                              toast: "Password must be at least 6 characters",
+                            },
+                          ]}
+                        >
+                          <Input.Password
+                            prefix={<LockOutlined />}
+                            placeholder="Enter new password"
+                          />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="confirmPassword"
+                          label="Confirm New Password"
+                          dependencies={["newPassword"]}
+                          rules={[
+                            {
+                              required: true,
+                              toast: "Please confirm your password",
+                            },
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                if (
+                                  !value ||
+                                  getFieldValue("newPassword") === value
+                                ) {
+                                  return Promise.resolve();
+                                }
+                                return Promise.reject(
+                                  new Error("Passwords do not match")
+                                );
+                              },
+                            }),
+                          ]}
+                        >
+                          <Input.Password
+                            prefix={<LockOutlined />}
+                            placeholder="Confirm new password"
+                          />
+                        </Form.Item>
+
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          loading={changingPassword}
+                          icon={<SaveOutlined />}
+                        >
+                          Change Password
+                        </Button>
+                      </Form>
+                    </div>
+                  </TabPane>
+
+                  {/* Address Management Tab */}
+                  <TabPane tab="Address Book" key="address">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-lg font-semibold">
-                        Personal Information
+                        Manage Addresses
                       </h3>
                       <Button
-                        icon={<EditOutlined />}
-                        onClick={() => setEditingProfile(!editingProfile)}
-                      >
-                        {editingProfile ? "Cancel Edit" : "Edit Profile"}
-                      </Button>
-                    </div>
-
-                    <Form
-                      form={form}
-                      layout="vertical"
-                      onFinish={handleProfileUpdate}
-                      initialValues={{
-                        name: user?.name,
-                        email: user?.email,
-                        age: user?.age,
-                      }}
-                    >
-                      <Row gutter={16}>
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            name="name"
-                            label="Full Name"
-                            rules={[
-                              {
-                                required: true,
-                                toast: "Please enter your name",
-                              },
-                            ]}
-                          >
-                            <Input
-                              disabled={!editingProfile}
-                              prefix={<UserOutlined />}
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12}>
-                          <Form.Item name="email" label="Email Address">
-                            <Input disabled type="email" />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={12}>
-                          <Form.Item name="age" label="Age">
-                            <Input disabled={!editingProfile} type="number" />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      {editingProfile && (
-                        <div className="flex gap-2 justify-end">
-                          <Button onClick={() => setEditingProfile(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="primary" htmlType="submit">
-                            Save Changes
-                          </Button>
-                        </div>
-                      )}
-                    </Form>
-                  </div>
-                </TabPane>
-
-                {/* Change Password Tab */}
-                <TabPane tab="Change Password" key="password">
-                  <div className="max-w-2xl">
-                    <h3 className="text-lg font-semibold mb-6">
-                      Update Password
-                    </h3>
-                    <Form
-                      form={passwordForm}
-                      layout="vertical"
-                      onFinish={handlePasswordChange}
-                    >
-                      <Form.Item
-                        name="oldPassword"
-                        label="Current Password"
-                        rules={[
-                          {
-                            required: true,
-                            toast: "Please enter your current password",
-                          },
-                        ]}
-                      >
-                        <Input.Password
-                          prefix={<LockOutlined />}
-                          placeholder="Enter current password"
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="newPassword"
-                        label="New Password"
-                        rules={[
-                          {
-                            required: true,
-                            toast: "Please enter new password",
-                          },
-                          {
-                            min: 6,
-                            toast: "Password must be at least 6 characters",
-                          },
-                        ]}
-                      >
-                        <Input.Password
-                          prefix={<LockOutlined />}
-                          placeholder="Enter new password"
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="confirmPassword"
-                        label="Confirm New Password"
-                        dependencies={["newPassword"]}
-                        rules={[
-                          {
-                            required: true,
-                            toast: "Please confirm your password",
-                          },
-                          ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (
-                                !value ||
-                                getFieldValue("newPassword") === value
-                              ) {
-                                return Promise.resolve();
-                              }
-                              return Promise.reject(
-                                new Error("Passwords do not match")
-                              );
-                            },
-                          }),
-                        ]}
-                      >
-                        <Input.Password
-                          prefix={<LockOutlined />}
-                          placeholder="Confirm new password"
-                        />
-                      </Form.Item>
-
-                      <Button
                         type="primary"
-                        htmlType="submit"
-                        loading={changingPassword}
-                        icon={<SaveOutlined />}
-                      >
-                        Change Password
-                      </Button>
-                    </Form>
-                  </div>
-                </TabPane>
-
-                {/* Address Management Tab */}
-                <TabPane tab="Address Book" key="address">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-semibold">Manage Addresses</h3>
-                    <Button
-                      type="primary"
-                      icon={<EnvironmentOutlined />}
-                      onClick={() => setAddressModalVisible(true)}
-                    >
-                      Add New Address
-                    </Button>
-                  </div>
-
-                  {addressLoading ? (
-                    <div className="text-center py-8">
-                      <Spin />
-                    </div>
-                  ) : addresses?.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {addresses.map((address, index) => (
-                        <AddressCard
-                          key={index}
-                          address={address}
-                          index={index}
-                          onEdit={handleEditAddress}
-                          openDeleteModal={openDeleteModal}
-                          onSetDefault={handleSetDefaultAddress}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <EnvironmentOutlined className="text-4xl text-gray-300 mb-4" />
-                      <p className="text-gray-500 text-lg">
-                        No addresses saved yet
-                      </p>
-                      <p className="text-gray-400 mb-4">
-                        Add your first address to get started
-                      </p>
-                      <Button
-                        type="primary"
+                        icon={<EnvironmentOutlined />}
                         onClick={() => setAddressModalVisible(true)}
                       >
-                        Add Your First Address
+                        Add New Address
                       </Button>
                     </div>
-                  )}
-                </TabPane>
-              </Tabs>
-            </Card>
+
+                    {addressLoading ? (
+                      <div className="text-center py-8">
+                        <Spin />
+                      </div>
+                    ) : addresses?.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {addresses.map((address, index) => (
+                          <AddressCard
+                            key={index}
+                            address={address}
+                            index={index}
+                            onEdit={handleEditAddress}
+                            openDeleteModal={openDeleteModal}
+                            onSetDefault={handleSetDefaultAddress}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <EnvironmentOutlined className="text-4xl text-gray-300 mb-4" />
+                        <p className="text-gray-500 text-lg">
+                          No addresses saved yet
+                        </p>
+                        <p className="text-gray-400 mb-4">
+                          Add your first address to get started
+                        </p>
+                        <Button
+                          type="primary"
+                          onClick={() => setAddressModalVisible(true)}
+                        >
+                          Add Your First Address
+                        </Button>
+                      </div>
+                    )}
+                  </TabPane>
+                </Tabs>
+              </Card>
+            </div>
           </Col>
         </Row>
 
@@ -621,61 +629,65 @@ const AddressCard = ({
   onSetDefault,
 }) => {
   return (
-    <Card
+    <div
       className={`border-l-4 ${
         address.isDefault
           ? "border-l-green-500 bg-green-50"
           : "border-l-blue-500"
       } hover:shadow-md transition-shadow`}
     >
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          {address.isDefault && (
-            <Tag color="green" icon={<StarOutlined />} className="mb-2">
-              Default
-            </Tag>
-          )}
-          <p className="font-semibold text-gray-800">{address.house}</p>
-          {address.street && <p className="text-gray-600">{address.street}</p>}
-          {address.landmark && (
-            <p className="text-gray-600">Near {address.landmark}</p>
-          )}
-          <p className="text-gray-600">
-            {address.city}, {address.state} - {address.pincode}
-          </p>
-          <p className="text-gray-600">{address.country}</p>
+      <Card>
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            {address.isDefault && (
+              <Tag color="green" icon={<StarOutlined />} className="mb-2">
+                Default
+              </Tag>
+            )}
+            <p className="font-semibold text-gray-800">{address.house}</p>
+            {address.street && (
+              <p className="text-gray-600">{address.street}</p>
+            )}
+            {address.landmark && (
+              <p className="text-gray-600">Near {address.landmark}</p>
+            )}
+            <p className="text-gray-600">
+              {address.city}, {address.state} - {address.pincode}
+            </p>
+            <p className="text-gray-600">{address.country}</p>
+          </div>
         </div>
-      </div>
 
-      <div className="flex gap-2">
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => onEdit(address, index)}
-        >
-          Edit
-        </Button>
-        {!address.isDefault && (
-          <>
-            <Button
-              size="small"
-              icon={<StarOutlined />}
-              onClick={() => onSetDefault(index)}
-            >
-              Set Default
-            </Button>
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => openDeleteModal(index)}
-            >
-              Delete
-            </Button>
-          </>
-        )}
-      </div>
-    </Card>
+        <div className="flex gap-2">
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => onEdit(address, index)}
+          >
+            Edit
+          </Button>
+          {!address.isDefault && (
+            <>
+              <Button
+                size="small"
+                icon={<StarOutlined />}
+                onClick={() => onSetDefault(index)}
+              >
+                Set Default
+              </Button>
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => openDeleteModal(index)}
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 };
 

@@ -10,7 +10,6 @@ import {
   Input,
   Select,
   Modal,
-  message,
   DatePicker,
 } from "antd";
 import {
@@ -23,6 +22,7 @@ import {
   adminGetAllOrders,
   adminDeleteOrder,
 } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -59,9 +59,9 @@ const OrdersManagement = () => {
     if (!selectedOrder) return;
     try {
       await dispatch(adminDeleteOrder(selectedOrder._id)).unwrap();
-      message.success("Order deleted successfully");
+      toast.success("Order deleted successfully");
     } catch (error) {
-      message.error(error?.message || "Failed to delete order");
+      toast.error(error?.message || "Failed to delete order");
     }
     setDeleteModalVisible(false);
   };

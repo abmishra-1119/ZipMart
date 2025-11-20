@@ -10,7 +10,6 @@ import {
   Tag,
   Space,
   Modal,
-  message,
   Spin,
   Row,
   Col,
@@ -46,6 +45,7 @@ import {
   adminGetSellerOrders,
   adminToggleUserStatus,
 } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { TabPane } = Tabs;
 
@@ -59,8 +59,6 @@ const SellerDetail = () => {
     orders: userOrders,
     products,
     isLoading,
-    isSuccess,
-    message: responseMessage,
   } = useSelector((state) => state.admin);
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -82,10 +80,10 @@ const SellerDetail = () => {
   const handleDeleteConfirm = async () => {
     try {
       await dispatch(adminDeleteUserById(sellerId)).unwrap();
-      message.success("Seller deleted successfully");
+      toast.success("Seller deleted successfully");
       navigate("/admin/dashboard/sellers");
     } catch (error) {
-      message.error(error?.message || "Failed to delete seller");
+      toast.error(error?.message || "Failed to delete seller");
     } finally {
       setDeleteModalVisible(false);
     }
@@ -95,16 +93,16 @@ const SellerDetail = () => {
     setDeleteModalVisible(false);
   };
 
-  const handleStatusToggle = async (checked) => {
+  const handleStatusToggle = async () => {
     setTogglingStatus(true);
     try {
       const result = await dispatch(adminToggleUserStatus(sellerId)).unwrap();
-      message.success(
+      toast.success(
         `Seller ${result.isActive ? "activated" : "deactivated"} successfully`
       );
       dispatch(adminGetUserById(sellerId));
     } catch (error) {
-      message.error(error?.message || "Failed to update seller status");
+      toast.error(error?.message || "Failed to update seller status");
     } finally {
       setTogglingStatus(false);
     }

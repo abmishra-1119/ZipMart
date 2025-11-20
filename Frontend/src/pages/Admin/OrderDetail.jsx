@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   Card,
   Descriptions,
@@ -9,7 +9,6 @@ import {
   Tag,
   Space,
   Modal,
-  message,
   Spin,
   Row,
   Col,
@@ -17,6 +16,10 @@ import {
   Timeline,
   Alert,
   Image,
+  Select,
+  Input,
+  Form,
+  Steps,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -28,19 +31,23 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  SyncOutlined,
 } from "@ant-design/icons";
 import {
   adminGetOrdersBId,
   adminDeleteOrder,
   adminUpdateRefund,
 } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
+
+const { Option } = Select;
+const { TextArea } = Input;
 
 const OrderDetail = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  const { isLoading } = useSelector((state) => state.admin);
+  const [form] = Form.useForm();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +55,6 @@ const OrderDetail = () => {
   // Modal states
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [refundModalVisible, setRefundModalVisible] = useState(false);
-  const [refundStatus, setRefundStatus] = useState("");
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -57,7 +63,7 @@ const OrderDetail = () => {
         const res = await dispatch(adminGetOrdersBId(orderId)).unwrap();
         setOrder(res);
       } catch (error) {
-        message.error(error?.message || "Failed to fetch order");
+        toast.error(error?.message || "Failed to fetch order");
         navigate("/admin/dashboard/orders");
       } finally {
         setLoading(false);
@@ -69,32 +75,57 @@ const OrderDetail = () => {
   const confirmDeleteOrder = async () => {
     try {
       await dispatch(adminDeleteOrder(orderId)).unwrap();
-      message.success("Order deleted successfully");
+      toast.success("Order deleted successfully");
       navigate("/admin/dashboard/orders");
     } catch (error) {
-      message.error(error?.message || "Failed to delete order");
+      toast.error(error?.message || "Failed to delete order");
     }
     setDeleteModalVisible(false);
   };
 
-  const handleRefundUpdate = (status) => {
-    setRefundStatus(status);
+  const isRefundablePayment = (order) => {
+    return (
+      order && order.paymentMethod !== "COD" && order.status === "cancelled"
+    );
+  };
+
+  const handleRefundUpdate = () => {
+    if (!isRefundablePayment(order)) {
+      toast.warning("This order is not eligible for refund processing");
+      return;
+    }
     setRefundModalVisible(true);
+    form.setFieldsValue({
+      refundProcess: order.refundProcess || "initiated",
+      refundMsg: order.refundMsg || "",
+    });
   };
 
   const confirmRefundUpdate = async () => {
     try {
+      const values = await form.validateFields();
+
       await dispatch(
-        adminUpdateRefund({ orderId, status: refundStatus })
+        adminUpdateRefund({
+          orderId,
+          status: "cancelled", // Keep status as cancelled
+          refundProcess: values.refundProcess,
+          refundMsg: values.refundMsg,
+        })
       ).unwrap();
 
-      message.success(`Refund status updated to ${refundStatus}`);
+      toast.success(`Refund process updated to ${values.refundProcess}`);
       setRefundModalVisible(false);
 
+      // Refresh order data
       const updatedOrder = await dispatch(adminGetOrdersBId(orderId)).unwrap();
       setOrder(updatedOrder);
     } catch (error) {
-      message.error(error?.message || "Failed to update refund status");
+      if (error.errorFields) {
+        toast.error("Please fill all required fields");
+      } else {
+        toast.error(error?.message || "Failed to update refund process");
+      }
     }
   };
 
@@ -117,19 +148,63 @@ const OrderDetail = () => {
     }
   };
 
-  const getRefundStatusColor = (status) => {
-    switch (status) {
-      case "approved":
+  const getRefundProcessColor = (process) => {
+    switch (process) {
+      case "completed":
         return "green";
-      case "pending":
-        return "orange";
-      case "rejected":
-        return "red";
-      case "processed":
+      case "processing":
         return "blue";
+      case "initiated":
+        return "orange";
+      case "failed":
+        return "red";
       default:
         return "default";
     }
+  };
+
+  const getRefundProcessText = (process) => {
+    switch (process) {
+      case "initiated":
+        return "Refund Initiated";
+      case "processing":
+        return "Processing Refund";
+      case "completed":
+        return "Refund Completed";
+      case "failed":
+        return "Refund Failed";
+      default:
+        return process || "Not Started";
+    }
+  };
+
+  const getRefundSteps = (order) => {
+    if (!isRefundablePayment(order)) return [];
+
+    const steps = [
+      {
+        title: "Refund Initiated",
+        description: "Refund request received",
+        status: order.refundProcess ? "finish" : "wait",
+      },
+      {
+        title: "Processing",
+        description: "Refund being processed",
+        status:
+          order.refundProcess === "processing"
+            ? "process"
+            : order.refundProcess === "completed"
+              ? "finish"
+              : "wait",
+      },
+      {
+        title: "Completed",
+        description: "Refund completed",
+        status: order.refundProcess === "completed" ? "finish" : "wait",
+      },
+    ];
+
+    return steps;
   };
 
   const productColumns = [
@@ -228,6 +303,28 @@ const OrderDetail = () => {
         </div>
       ),
     },
+    ...(order?.status === "cancelled"
+      ? [
+          {
+            color: "red",
+            children: (
+              <div>
+                <p className="font-medium">Cancelled</p>
+                <p className="text-gray-500 text-sm">
+                  Order has been cancelled
+                  {isRefundablePayment(order) && order.refundProcess && (
+                    <div className="mt-1">
+                      <Tag color={getRefundProcessColor(order.refundProcess)}>
+                        {getRefundProcessText(order.refundProcess)}
+                      </Tag>
+                    </div>
+                  )}
+                </p>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (loading) {
@@ -276,21 +373,62 @@ const OrderDetail = () => {
         <p>This action cannot be undone.</p>
       </Modal>
 
-      {/* Refund Modal */}
+      {/* Refund Update Modal */}
       <Modal
-        title="Update Refund Status"
+        title="Update Refund Process"
         open={refundModalVisible}
         onOk={confirmRefundUpdate}
         onCancel={() => setRefundModalVisible(false)}
-        okText="Update"
+        okText="Update Refund"
         cancelText="Cancel"
+        width={600}
       >
-        <p>Update refund status to:</p>
-        <p className="font-semibold text-lg text-center my-3">
-          <Tag color={getRefundStatusColor(refundStatus)}>
-            {refundStatus.toUpperCase()}
-          </Tag>
-        </p>
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            refundProcess: order.refundProcess || "initiated",
+            refundMsg: order.refundMsg || "",
+          }}
+        >
+          <Form.Item
+            label="Refund Process Status"
+            name="refundProcess"
+            rules={[
+              {
+                required: true,
+                message: "Please select refund process status",
+              },
+            ]}
+          >
+            <Select>
+              <Option value="initiated">Initiated</Option>
+              <Option value="processing">Processing</Option>
+              <Option value="completed">Completed</Option>
+              <Option value="failed">Failed</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Refund Message"
+            name="refundMsg"
+            rules={[{ required: true, message: "Please enter refund message" }]}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Enter refund status message for customer (e.g., 'Refund will be processed in 7 working days')"
+            />
+          </Form.Item>
+
+          {isRefundablePayment(order) && (
+            <Alert
+              message="Refund Information"
+              description={`Refund amount: ₹${order.finalPrice} will be processed to customer's original payment method.`}
+              type="info"
+              showIcon
+            />
+          )}
+        </Form>
       </Modal>
 
       {/* Header */}
@@ -312,6 +450,15 @@ const OrderDetail = () => {
         </div>
 
         <Space>
+          {isRefundablePayment(order) && (
+            <Button
+              type="primary"
+              icon={<DollarOutlined />}
+              onClick={handleRefundUpdate}
+            >
+              Update Refund
+            </Button>
+          )}
           <Button
             danger
             icon={<DeleteOutlined />}
@@ -331,7 +478,7 @@ const OrderDetail = () => {
                 <Statistic
                   title="Total Amount"
                   value={order.finalPrice || 0}
-                  prefix={<DollarOutlined />}
+                  prefix="₹"
                   valueStyle={{ color: "#3f8600" }}
                   precision={2}
                 />
@@ -358,41 +505,58 @@ const OrderDetail = () => {
                   >
                     {order.status?.toUpperCase()}
                   </Tag>
+                  {isRefundablePayment(order) && order.refundProcess && (
+                    <div className="mt-2">
+                      <Tag color={getRefundProcessColor(order.refundProcess)}>
+                        {getRefundProcessText(order.refundProcess)}
+                      </Tag>
+                    </div>
+                  )}
                 </div>
               </Card>
             </Col>
 
-            {order.refundStatus && (
+            {/* Refund Status Card */}
+            {isRefundablePayment(order) && (
               <Col xs={24}>
-                <Card title="Refund Status">
-                  <div className="text-center">
-                    <Tag
-                      color={getRefundStatusColor(order.refundStatus)}
-                      className="text-lg px-4 py-1"
-                    >
-                      {order.refundStatus.toUpperCase()}
-                    </Tag>
-                    <div className="mt-3 space-y-2">
-                      <Button
-                        type="primary"
-                        size="small"
-                        icon={<CheckCircleOutlined />}
-                        onClick={() => handleRefundUpdate("approved")}
-                        disabled={order.refundStatus === "approved"}
-                      >
-                        Approve
-                      </Button>
+                <Card
+                  title="Refund Process"
+                  extra={<DollarOutlined className="text-green-600" />}
+                >
+                  <Steps
+                    direction="vertical"
+                    size="small"
+                    current={
+                      order.refundProcess === "initiated"
+                        ? 0
+                        : order.refundProcess === "processing"
+                          ? 1
+                          : order.refundProcess === "completed"
+                            ? 2
+                            : 0
+                    }
+                    items={getRefundSteps(order)}
+                  />
 
-                      <Button
-                        danger
-                        size="small"
-                        icon={<CloseCircleOutlined />}
-                        onClick={() => handleRefundUpdate("rejected")}
-                        disabled={order.refundStatus === "rejected"}
-                        className="ml-2"
-                      >
-                        Reject
-                      </Button>
+                  {order.refundMsg && (
+                    <Alert
+                      message="Customer Message"
+                      description={order.refundMsg}
+                      type="info"
+                      showIcon
+                      className="mt-3"
+                    />
+                  )}
+
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Refund Amount:</span>
+                      <span className="text-green-600 font-bold">
+                        ₹{order.finalPrice}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Payment Method: {order.paymentMethod}
                     </div>
                   </div>
                 </Card>
@@ -403,66 +567,95 @@ const OrderDetail = () => {
 
         {/* Order Information */}
         <Col xs={24} lg={16}>
-          <Card title="Order Information" className="mb-6">
-            <Descriptions column={{ xs: 1, sm: 2 }} bordered>
-              <Descriptions.Item label="Order ID">
-                <span style={{ whiteSpace: "nowrap", userSelect: "text" }}>
-                  #{order?._id?.slice(-8) || "N/A"}
-                </span>
-              </Descriptions.Item>
+          <div className="mb-6">
+            <Card title="Order Information">
+              <Descriptions
+                bordered
+                column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2 }}
+                labelStyle={{ whiteSpace: "normal" }}
+                contentStyle={{ whiteSpace: "normal" }}
+              >
+                <Descriptions.Item label="Order ID">
+                  <span className="whitespace-nowrap select-text">
+                    #{order?._id?.slice(-8) || "N/A"}
+                  </span>
+                </Descriptions.Item>
 
-              <Descriptions.Item label="Order Date">
-                {order.orderDate || order.createdAt
-                  ? new Date(
-                      order.orderDate || order.createdAt
-                    ).toLocaleString()
-                  : "N/A"}
-              </Descriptions.Item>
+                <Descriptions.Item label="Order Date">
+                  <span className="break-normal">
+                    {order.orderDate || order.createdAt
+                      ? new Date(
+                          order.orderDate || order.createdAt
+                        ).toLocaleString()
+                      : "N/A"}
+                  </span>
+                </Descriptions.Item>
 
-              <Descriptions.Item label="Customer">
-                <span style={{ whiteSpace: "nowrap", userSelect: "text" }}>
-                  {order.user?.name || "N/A"}
-                </span>
-              </Descriptions.Item>
+                <Descriptions.Item label="Name">
+                  <span className="break-words select-text max-w-full block">
+                    {order.user?.name || "N/A"}
+                  </span>
+                </Descriptions.Item>
 
-              <Descriptions.Item label="Customer Email">
-                <span style={{ whiteSpace: "nowrap", userSelect: "text" }}>
-                  {order.user?.email || "N/A"}
-                </span>
-              </Descriptions.Item>
+                <Descriptions.Item label="Customer Email">
+                  <span className="break-all select-text max-w-full block">
+                    {order.user?.email || "N/A"}
+                  </span>
+                </Descriptions.Item>
 
-              <Descriptions.Item label="Payment Method">
-                {order.paymentMethod || "N/A"}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+                <Descriptions.Item label="Payment Method">
+                  {order.paymentMethod || "N/A"}
+                  {isRefundablePayment(order) && (
+                    <Tag color="green" className="ml-2">
+                      Refund Eligible
+                    </Tag>
+                  )}
+                </Descriptions.Item>
+
+                {isRefundablePayment(order) && order.refundProcess && (
+                  <Descriptions.Item label="Refund Status">
+                    <Tag color={getRefundProcessColor(order.refundProcess)}>
+                      {getRefundProcessText(order.refundProcess)}
+                    </Tag>
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </Card>
+          </div>
 
           {/* Shipping Information */}
-          <Card title="Shipping Information" className="mb-6">
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="Shipping Address">
-                <div className="flex items-start">
-                  <EnvironmentOutlined className="mr-2 mt-1" />
-                  <div>
-                    <div>{order.address?.street}</div>
+          <div className="mb-6">
+            <Card title="Shipping Information">
+              <Descriptions column={1} bordered>
+                <Descriptions.Item label="Shipping Address">
+                  <div className="flex items-start">
+                    <EnvironmentOutlined className="mr-2 mt-1" />
                     <div>
-                      {order.address?.city}, {order.address?.state}
-                    </div>
-                    <div>
-                      {order.address?.zipCode}, {order.address?.country}
+                      <div>
+                        {order.address?.house} {order.address?.street}
+                      </div>
+                      <div>
+                        {order.address?.landmark &&
+                          `Near ${order.address.landmark}`}
+                      </div>
+                      <div>
+                        {order.address?.city}, {order.address?.state} -{" "}
+                        {order.address?.pincode}
+                      </div>
+                      <div>{order.address?.country}</div>
                     </div>
                   </div>
-                </div>
-              </Descriptions.Item>
+                </Descriptions.Item>
 
-              <Descriptions.Item label="Contact">
-                <div className="flex items-center">
-                  <PhoneOutlined className="mr-2" />
-                  {order.user?.phone || "N/A"}
-                </div>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+                <Descriptions.Item label="Contact">
+                  <div className="flex items-center">
+                    <PhoneOutlined className="mr-2" />
+                    {order.user?.phone || "N/A"}
+                  </div>
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          </div>
         </Col>
 
         {/* Order Timeline */}
@@ -502,13 +695,13 @@ const OrderDetail = () => {
           </Card>
         </Col>
 
-        {/* Notes */}
-        {order.notes && (
+        {/* Refund Notes */}
+        {order.refundMsg && (
           <Col xs={24}>
-            <Card title="Order Notes">
-              <div className="p-4 bg-gray-50 rounded">
-                <FileTextOutlined className="mr-2" />
-                {order.notes}
+            <Card title="Refund Information">
+              <div className="p-4 bg-blue-50 rounded border">
+                <FileTextOutlined className="mr-2 text-blue-600" />
+                <span className="text-blue-800">{order.refundMsg}</span>
               </div>
             </Card>
           </Col>

@@ -87,7 +87,7 @@ const orderSchema = new mongoose.Schema({
     },
     refundProcess: {
         type: String,
-        enum: ['processing', 'initiated', 'cancelled', 'done'],
+        enum: ['processing', 'initiated', 'failed', 'completed'],
     },
     refundTime: Date,
     refundMsg: String,

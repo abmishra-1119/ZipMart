@@ -34,6 +34,7 @@ import SellersManagement from "./pages/Admin/SellersManagement";
 import CreateSeller from "./pages/Admin/CreateSeller";
 import OrderDetail from "./pages/Admin/OrderDetail";
 import SellerDetail from "./pages/Admin/SellerDetail";
+import CouponManagement from "./pages/Admin/CouponManagement";
 
 function AppWrapper() {
   const location = useLocation();
@@ -90,6 +91,7 @@ function AppWrapper() {
           <Route path="sellers/create" element={<CreateSeller />} />
           <Route path="sellers/:sellerId" element={<SellerDetail />} />
           <Route path="orders/:orderId" element={<OrderDetail />} />
+          <Route path="coupons" element={<CouponManagement />} />
         </Route>
       </Routes>
     </>

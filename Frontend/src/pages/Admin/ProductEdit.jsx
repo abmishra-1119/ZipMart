@@ -9,7 +9,6 @@ import {
   Select,
   InputNumber,
   Upload,
-  message,
   Row,
   Col,
   Divider,
@@ -32,6 +31,7 @@ import {
 } from "@ant-design/icons";
 import { getProductById } from "../../features/product/productSlice";
 import { adminUpdateProduct } from "../../features/admin/adminSlice";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -120,7 +120,7 @@ const ProductEdit = () => {
       file.type === "image/jpg";
 
     if (!isValidType) {
-      message.error("You can only upload JPG, PNG, or WebP files!");
+      toast.error("You can only upload JPG, PNG, or WebP files!");
       onError(new Error("Invalid file type"));
       setUploading(false);
       return;
@@ -128,7 +128,7 @@ const ProductEdit = () => {
 
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error("Image must be smaller than 5MB!");
+      toast.error("Image must be smaller than 5MB!");
       onError(new Error("File too large"));
       setUploading(false);
       return;
@@ -206,11 +206,11 @@ const ProductEdit = () => {
         })
       ).unwrap();
 
-      message.success("Product updated successfully");
+      toast.success("Product updated successfully");
       navigate("/admin/dashboard/products");
     } catch (error) {
       console.error("Update error:", error);
-      message.error(error?.message || "Failed to update product");
+      toast.error(error?.message || "Failed to update product");
     }
   };
 
@@ -566,14 +566,14 @@ const ProductEdit = () => {
                       file.type === "image/webp" ||
                       file.type === "image/jpg";
                     if (!isValidType) {
-                      message.error(
+                      toast.error(
                         "You can only upload JPG, PNG, or WebP files!"
                       );
                       return false;
                     }
                     const isLt5M = file.size / 1024 / 1024 < 5;
                     if (!isLt5M) {
-                      message.error("Image must be smaller than 5MB!");
+                      toast.error("Image must be smaller than 5MB!");
                       return false;
                     }
                     return true;
