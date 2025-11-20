@@ -1,20 +1,17 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv'
+import { Resend } from "resend";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Allowed FROM emails:
+// 1. onboarding@resend.dev (works without domain)
+// 2. noreply@yourdomain.com (after domain verification)
+const FROM_EMAIL = "ZipMart <onboarding@resend.dev>";
 
 const OTP_EMAIL_TEMPLATE = (otp, title, instruction) => {
-    const appName = "Auth App";
+    const appName = "ZipMart";
     const accentColor = "#4F46E5";
 
     return `
@@ -25,82 +22,82 @@ const OTP_EMAIL_TEMPLATE = (otp, title, instruction) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; background-color: #f4f4f4;">
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
 
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);">
-        <!-- Header -->
+    <table align="center" width="100%" style="max-width: 600px; background: #fff; border-radius: 8px;">
         <tr>
-            <td align="center" style="padding: 30px 20px 0px 20px;">
-                <h1 style="color: ${accentColor}; font-size: 24px; margin: 0; padding: 0;">${appName}</h1>
+            <td align="center" style="padding: 30px 20px 0;">
+                <h1 style="color: ${accentColor}; font-size: 24px; margin: 0;">
+                    ${appName}
+                </h1>
             </td>
         </tr>
 
-        <!-- Main Content Area -->
         <tr>
             <td align="center" style="padding: 20px 40px;">
-                <h2 style="color: #333333; font-size: 20px; font-weight: 600; margin-bottom: 25px;">${title}</h2>
-                
-                <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                <h2 style="color: #333; font-size: 20px; margin-bottom: 25px;">
+                    ${title}
+                </h2>
+
+                <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
                     ${instruction}
                 </p>
 
-                <!-- OTP Display Box -->
-                <table align="center" border="0" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 300px; margin-bottom: 30px; border-radius: 8px; overflow: hidden; background-color: #f7f7f7; border: 1px solid #e0e0e0;">
+                <table align="center" style="max-width: 300px; background: #f7f7f7; border: 1px solid #eee; border-radius: 8px; margin-bottom: 30px;">
                     <tr>
-                        <td align="center" style="padding: 15px 20px;">
-                            <span style="color: #1a1a1a; font-size: 32px; font-weight: bold; letter-spacing: 5px; display: block;">
+                        <td align="center" style="padding: 15px;">
+                            <span style="color: #1a1a1a; font-size: 32px; font-weight: bold; letter-spacing: 5px;">
                                 ${otp}
                             </span>
                         </td>
                     </tr>
                 </table>
-                
+
                 <p style="color: #cc0000; font-size: 14px; font-weight: 500; margin-bottom: 30px;">
-                    <strong>Important:</strong> This code is valid for only 5 minutes. Please do not share this code with anyone.
+                    <strong>Important:</strong> OTP valid for 5 minutes. Do not share it.
                 </p>
 
-                <p style="color: #777777; font-size: 14px;">
-                    If you did not request this, you can safely ignore this email.
+                <p style="color: #777; font-size: 14px;">
+                    If this was not you, ignore this email.
                 </p>
             </td>
         </tr>
 
-        <!-- Footer -->
         <tr>
-            <td align="center" style="padding: 20px; background-color: #f9f9f9; border-top: 1px solid #eeeeee;">
-                <p style="color: #aaaaaa; font-size: 12px; margin: 0;">
-                    &copy; ${new Date().getFullYear()} ${appName}. All rights reserved.
+            <td align="center" style="padding: 20px; background: #f9f9f9; border-top: 1px solid #eee;">
+                <p style="color: #aaa; font-size: 12px; margin: 0;">
+                    © ${new Date().getFullYear()} ${appName}. All rights reserved.
                 </p>
             </td>
         </tr>
     </table>
 
 </body>
-</html>
-  `;
+</html>`;
 };
 
 export const sendOtpEmail = async (email, otp) => {
     const title = "Verify Your Identity";
-    const instruction = "Use the following One-Time Password (OTP) to complete your login or requested action.";
+    const instruction =
+        "Use the following One-Time Password (OTP) to complete your login or requested action.";
 
-    await transporter.sendMail({
-        from: `"Auth App" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+        from: FROM_EMAIL,
         to: email,
         subject: "Your One-Time Verification Code",
-        html: OTP_EMAIL_TEMPLATE(otp, title, instruction)
+        html: OTP_EMAIL_TEMPLATE(otp, title, instruction),
     });
 };
 
-
 export const sendForgotPasswordOtp = async (email, otp) => {
     const title = "Password Reset Verification";
-    const instruction = "You requested a password reset. Use the following One-Time Password (OTP) to verify your identity and set a new password.";
+    const instruction =
+        "Use this OTP to verify your identity and reset your password.";
 
-    await transporter.sendMail({
-        from: `"Auth App" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+        from: FROM_EMAIL,
         to: email,
         subject: "Password Reset Code (Valid for 5 minutes)",
-        html: OTP_EMAIL_TEMPLATE(otp, title, instruction)
+        html: OTP_EMAIL_TEMPLATE(otp, title, instruction),
     });
 };
