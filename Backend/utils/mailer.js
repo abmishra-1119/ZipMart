@@ -4,14 +4,15 @@ import dotenv from 'dotenv'
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
 });
 
-// Refactored template to accept dynamic title and instructions for reuse
 const OTP_EMAIL_TEMPLATE = (otp, title, instruction) => {
     const appName = "Auth App";
     const accentColor = "#4F46E5";
@@ -79,7 +80,7 @@ const OTP_EMAIL_TEMPLATE = (otp, title, instruction) => {
   `;
 };
 
-export const sendOtpEmail = async(email, otp) => {
+export const sendOtpEmail = async (email, otp) => {
     const title = "Verify Your Identity";
     const instruction = "Use the following One-Time Password (OTP) to complete your login or requested action.";
 
@@ -92,7 +93,7 @@ export const sendOtpEmail = async(email, otp) => {
 };
 
 
-export const sendForgotPasswordOtp = async(email, otp) => {
+export const sendForgotPasswordOtp = async (email, otp) => {
     const title = "Password Reset Verification";
     const instruction = "You requested a password reset. Use the following One-Time Password (OTP) to verify your identity and set a new password.";
 
