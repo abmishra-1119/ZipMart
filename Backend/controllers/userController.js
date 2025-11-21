@@ -121,6 +121,7 @@ export const login = asyncHandler(async (req, res) => {
       email: find.email,
       role: find.role,
       cart: find.cart,
+        age : find.age,
     },
   });
 });

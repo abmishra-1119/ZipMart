@@ -390,7 +390,7 @@ const ProfilePage = () => {
                             >
                               <InputNumber
                                 min={0}
-                                max={120}
+                                max={99}
                                 style={{ width: "100%" }}
                                 disabled={!editingProfile}
                                 placeholder="Enter your age"
