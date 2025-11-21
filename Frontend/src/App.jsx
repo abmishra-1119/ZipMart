@@ -3,7 +3,7 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import { ToastContainer } from "react-toastify";
+import { Bounce, ToastContainer } from "react-toastify";
 import Signup from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProductDetails from "./pages/ProductDetails";
@@ -47,8 +47,17 @@ function AppWrapper() {
   return (
     <>
       {!hideNavbar && <Navbar />}
-
-      <ToastContainer position="top-right" autoClose={2000} theme="dark" />
+      <ToastContainer
+        position="top-center"
+        autoClose={1500}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick={true}
+        rtl={false}
+        draggable
+        theme="dark"
+        transition={Bounce}
+      />
 
       <Routes>
         <Route path="/" element={<Home />} />
