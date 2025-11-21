@@ -304,7 +304,7 @@ const OrdersPage = () => {
                       <Button
                         type="primary"
                         icon={<ShoppingOutlined />}
-                        onClick={() => navigate("/products")}
+                        onClick={() => navigate("/")}
                       >
                         Start Shopping
                       </Button>

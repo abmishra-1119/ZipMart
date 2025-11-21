@@ -87,10 +87,10 @@ const ProductsManagement = () => {
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
-      product.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchText.toLowerCase());
+      product?.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      product?.description.toLowerCase().includes(searchText.toLowerCase());
     const matchesCategory =
-      !categoryFilter || product.category === categoryFilter;
+      !categoryFilter || product?.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -200,7 +200,7 @@ const ProductsManagement = () => {
         <Button
           type="primary"
           icon={<PlusOutlined />}
-          onClick={() => navigate("/seller/dashboard/products/create")}
+          onClick={() => navigate("/seller/products/create")}
           size="large"
         >
           Add New Product

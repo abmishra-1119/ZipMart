@@ -17,6 +17,7 @@ import {
   Tabs,
   Tag,
   Switch,
+  InputNumber,
 } from "antd";
 import {
   UserOutlined,
@@ -357,8 +358,43 @@ const ProfilePage = () => {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item name="age" label="Age">
-                              <Input disabled={!editingProfile} type="number" />
+                            <Form.Item
+                              name="age"
+                              label="Age"
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Please enter your age",
+                                },
+
+                                {
+                                  type: "number",
+                                  min: 18,
+                                  max: 120,
+                                  message: "Age must be between 18 and 120",
+                                },
+
+                                {
+                                  validator: (_, value) => {
+                                    if (value && value < 18) {
+                                      return Promise.reject(
+                                        new Error(
+                                          "You must be at least 18 years old!"
+                                        )
+                                      );
+                                    }
+                                    return Promise.resolve();
+                                  },
+                                },
+                              ]}
+                            >
+                              <InputNumber
+                                min={0}
+                                max={120}
+                                style={{ width: "100%" }}
+                                disabled={!editingProfile}
+                                placeholder="Enter your age"
+                              />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -579,10 +615,13 @@ const ProfilePage = () => {
                 <Form.Item
                   name="pincode"
                   label="Pincode"
-                  // rules={[
-                  //     { required: true, toast: 'Please enter pincode' },
-                  //     { pattern: /^[1-9][0-9]{5}$/, toast: 'Please enter valid pincode' }
-                  // ]}
+                  rules={[
+                    { required: true, toast: "Please enter pincode" },
+                    {
+                      pattern: /^[1-9][0-9]{5}$/,
+                      toast: "Please enter valid pincode",
+                    },
+                  ]}
                 >
                   <Input placeholder="e.g., 400001" maxLength={6} />
                 </Form.Item>

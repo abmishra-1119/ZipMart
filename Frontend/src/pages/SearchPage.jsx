@@ -177,10 +177,7 @@ const SearchPage = () => {
                       <p className="text-gray-500">
                         Try adjusting your search terms or browse all products
                       </p>
-                      <Button
-                        type="primary"
-                        onClick={() => navigate("/products")}
-                      >
+                      <Button type="primary" onClick={() => navigate("/")}>
                         Browse All Products
                       </Button>
                     </div>
