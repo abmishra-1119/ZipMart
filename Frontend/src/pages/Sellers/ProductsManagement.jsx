@@ -26,6 +26,7 @@ import {
   deleteMyProduct,
 } from "../../features/seller/sellerSlice";
 import { toast } from "react-toastify";
+import { getAllCategories } from "../../features/product/productSlice";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -41,15 +42,18 @@ const ProductsManagement = () => {
     message: sellerMessage,
   } = useSelector((state) => state.seller);
 
+  const { categories } = useSelector((state) => state.products);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchText, setSearchText] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState(undefined);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     dispatch(getMyProducts({ page: currentPage, limit: pageSize }));
+    dispatch(getAllCategories());
   }, [dispatch, currentPage, pageSize]);
 
   useEffect(() => {
@@ -82,8 +86,6 @@ const ProductsManagement = () => {
   const handleEditProduct = (productId) => {
     navigate(`/seller/products/edit/${productId}`);
   };
-
-  const categories = [...new Set(products.map((product) => product.category))];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
