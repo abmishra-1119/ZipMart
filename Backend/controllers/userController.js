@@ -247,7 +247,7 @@ export const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.user;
 
   const updated = await User.findByIdAndUpdate(id, req.body, {
-    new: true,
+    new: true, runValidators: true
   }).select("name email age role updatedAt");
 
   if (!updated) return res.status(404).json({ message: "User not found" });
