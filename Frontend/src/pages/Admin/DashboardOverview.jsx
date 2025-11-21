@@ -236,7 +236,7 @@ const AdminDashboardOverview = () => {
               dataSource={users.slice(0, 5)}
               pagination={false}
               size="small"
-              scroll={{ x: 600 }}
+              scroll={{ x: 450 }}
             />
           </Card>
         </Col>
@@ -259,6 +259,7 @@ const AdminDashboardOverview = () => {
               dataSource={orders.slice(0, 5)}
               pagination={false}
               size="small"
+              scroll={{ x: 450 }}
             />
           </Card>
         </Col>

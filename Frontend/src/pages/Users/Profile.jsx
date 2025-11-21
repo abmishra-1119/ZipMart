@@ -370,8 +370,8 @@ const ProfilePage = () => {
                                 {
                                   type: "number",
                                   min: 18,
-                                  max: 120,
-                                  message: "Age must be between 18 and 120",
+                                  max: 99,
+                                  message: "Age must be between 18 and 99",
                                 },
 
                                 {
