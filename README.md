@@ -5,7 +5,7 @@ A full-stack e-commerce application built with the MERN stack, featuring multi-v
 ## 🚀 Live Demo
 
 - **Frontend**: [https://zip-mart.vercel.app](https://zip-mart.vercel.app)
-- **Backend API**: [https://zipmart-production.up.railway.app](https://zipmart-production.up.railway.app)
+- **Backend API**: [https://zipmart-production.up.railway.app](https://zipmart-j4td.onrender.com/)
 - **GitHub Repository**: [https://github.com/abmishra-1119/ZipMart](https://github.com/abmishra-1119/ZipMart)
 
 ## ✨ Features
