@@ -1,6 +1,8 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
+const PORT = process.env.PORT || 5000;
+
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -9,9 +11,13 @@ const options = {
             version: '1.0.0',
             description: 'API documentation for Ecommerce project'
         },
-        servers: [{
-            url: 'http://localhost:5000'
-        }],
+        servers: [
+            {
+                url: process.env.NODE_ENV === 'production'
+                    ? 'https://your-app-name.onrender.com'
+                    : `http://localhost:${PORT}`
+            }
+        ],
         components: {
             securitySchemes: {
                 bearerAuth: {
@@ -26,7 +32,8 @@ const options = {
         }]
     },
     apis: ['./routes/*.js']
-}
+};
+
 const swaggerSpec = swaggerJSDoc(options);
 
 export const swaggerDocs = (app) => {
