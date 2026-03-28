@@ -14,7 +14,7 @@ const options = {
         servers: [
             {
                 url: process.env.NODE_ENV === 'production'
-                    ? 'https://your-app-name.onrender.com'
+                    ? 'https://zipmart-j4td.onrender.com/'
                     : `http://localhost:${PORT}`
             }
         ],
